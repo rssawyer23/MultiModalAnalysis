@@ -24,36 +24,26 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="facet_diagnostics.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/facet_diagnostics.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2600">
-              <caret line="77" column="61" lean-forward="true" selection-start-line="77" selection-start-column="61" selection-end-line="77" selection-end-column="61" />
-              <folding>
-                <element signature="e#94#113#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="trajectories_crystal_island.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="trajectories_crystal_island.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/trajectories_crystal_island.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-8119">
-              <caret line="68" column="0" lean-forward="true" selection-start-line="68" selection-start-column="0" selection-end-line="68" selection-end-column="0" />
+            <state relative-caret-position="84">
+              <caret line="56" column="74" lean-forward="false" selection-start-line="56" selection-start-column="74" selection-end-line="56" selection-end-column="74" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#286#526#0" expanded="false" />
                 <element signature="e#669#2248#0" expanded="false" />
                 <element signature="e#2331#2606#0" expanded="false" />
-                <element signature="e#9024#9444#0" expanded="false" />
-                <element signature="e#9501#10034#0" expanded="false" />
-                <element signature="e#10098#11049#0" expanded="false" />
-                <element signature="e#11101#11261#0" expanded="false" />
-                <element signature="e#11350#11666#0" expanded="false" />
-                <element signature="e#11758#12556#0" expanded="false" />
-                <element signature="e#12604#13336#0" expanded="false" />
-                <element signature="e#13428#15070#0" expanded="false" />
-                <element signature="e#15182#16045#0" expanded="false" />
+                <element signature="e#2688#3313#0" expanded="false" />
+                <element signature="e#9106#9526#0" expanded="false" />
+                <element signature="e#9583#10116#0" expanded="false" />
+                <element signature="e#10180#11131#0" expanded="false" />
+                <element signature="e#11183#11343#0" expanded="false" />
+                <element signature="e#11432#11748#0" expanded="false" />
+                <element signature="e#11840#12638#0" expanded="false" />
+                <element signature="e#12686#13418#0" expanded="false" />
+                <element signature="e#13510#15152#0" expanded="false" />
+                <element signature="e#15264#16127#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -62,18 +52,8 @@
       <file leaf-file-name="cumulatives_baseline.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/cumulatives_baseline.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="160">
+            <state relative-caret-position="-722">
               <caret line="4" column="41" lean-forward="true" selection-start-line="4" selection-start-column="41" selection-end-line="4" selection-end-column="41" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="19" column="5" lean-forward="false" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
               <folding />
             </state>
           </provider>
@@ -88,6 +68,18 @@
                 <element signature="e#0#29#0" expanded="true" />
                 <element signature="e#1383#1851#0" expanded="false" />
                 <element signature="e#2052#4800#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="add_action_counts.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/add_action_counts.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1402">
+              <caret line="130" column="31" lean-forward="true" selection-start-line="130" selection-start-column="31" selection-end-line="130" selection-end-column="31" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -141,10 +133,10 @@
         <option value="$PROJECT_DIR$/clean_golden.py" />
         <option value="$PROJECT_DIR$/cumulatives_baseline.py" />
         <option value="$PROJECT_DIR$/from_pipeline.py" />
-        <option value="$PROJECT_DIR$/trajectories_crystal_island.py" />
         <option value="$PROJECT_DIR$/reformat_output.py" />
         <option value="$PROJECT_DIR$/MetaTutuorFacetSequences/metatutor_ivh_reactions.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/trajectories_crystal_island.py" />
       </list>
     </option>
   </component>
@@ -217,7 +209,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.reformat_output">
+  <component name="RunManager" selected="Python.trajectories_crystal_island">
     <configuration default="false" name="trajectories_crystal_island" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -231,24 +223,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="MultiModalAnalysis" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/trajectories_crystal_island.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="from_pipeline" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="MultiModalAnalysis" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/from_pipeline.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -303,6 +277,24 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="MultiModalAnalysis" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/reformat_output.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="add_action_counts" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MultiModalAnalysis" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/add_action_counts.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -374,17 +366,17 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.trajectories_crystal_island" />
-      <item index="1" class="java.lang.String" itemvalue="Python.from_pipeline" />
-      <item index="2" class="java.lang.String" itemvalue="Python.cumulatives_baseline" />
-      <item index="3" class="java.lang.String" itemvalue="Python.metatutor_ivh_reactions" />
-      <item index="4" class="java.lang.String" itemvalue="Python.reformat_output" />
+      <item index="1" class="java.lang.String" itemvalue="Python.cumulatives_baseline" />
+      <item index="2" class="java.lang.String" itemvalue="Python.metatutor_ivh_reactions" />
+      <item index="3" class="java.lang.String" itemvalue="Python.reformat_output" />
+      <item index="4" class="java.lang.String" itemvalue="Python.add_action_counts" />
     </list>
     <recent_temporary>
       <list size="4">
-        <item index="0" class="java.lang.String" itemvalue="Python.reformat_output" />
-        <item index="1" class="java.lang.String" itemvalue="Python.metatutor_ivh_reactions" />
-        <item index="2" class="java.lang.String" itemvalue="Python.trajectories_crystal_island" />
-        <item index="3" class="java.lang.String" itemvalue="Python.from_pipeline" />
+        <item index="0" class="java.lang.String" itemvalue="Python.trajectories_crystal_island" />
+        <item index="1" class="java.lang.String" itemvalue="Python.add_action_counts" />
+        <item index="2" class="java.lang.String" itemvalue="Python.reformat_output" />
+        <item index="3" class="java.lang.String" itemvalue="Python.metatutor_ivh_reactions" />
       </list>
     </recent_temporary>
   </component>
@@ -413,13 +405,13 @@
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-16" y="-16" width="3872" height="2092" extended-state="7" />
+    <frame x="-16" y="-16" width="3872" height="2092" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24166666" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.4295011" sideWeight="0.17291667" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36605206" sideWeight="0.8356771" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36605206" sideWeight="0.16588542" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36605206" sideWeight="0.8341146" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4295011" sideWeight="0.82708335" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -448,7 +440,7 @@
           <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="49" />
+      <option name="time" value="51" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -722,31 +714,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/from_pipeline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="640">
-          <caret line="110" column="44" lean-forward="true" selection-start-line="110" selection-start-column="44" selection-end-line="110" selection-end-column="44" />
-          <folding>
-            <element signature="e#108#160#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="437">
           <caret line="308" column="0" lean-forward="false" selection-start-line="308" selection-start-column="0" selection-end-line="308" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/facet_diagnostics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2600">
-          <caret line="77" column="61" lean-forward="true" selection-start-line="77" selection-start-column="61" selection-end-line="77" selection-end-column="61" />
-          <folding>
-            <element signature="e#94#113#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -776,42 +748,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/add_action_counts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="657">
-          <caret line="143" column="23" lean-forward="true" selection-start-line="143" selection-start-column="23" selection-end-line="143" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/add_game_score.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2505">
           <caret line="111" column="0" lean-forward="true" selection-start-line="111" selection-start-column="0" selection-end-line="111" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/trajectories_crystal_island.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8119">
-          <caret line="68" column="0" lean-forward="true" selection-start-line="68" selection-start-column="0" selection-end-line="68" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-            <element signature="e#669#2248#0" expanded="false" />
-            <element signature="e#2331#2606#0" expanded="false" />
-            <element signature="e#9024#9444#0" expanded="false" />
-            <element signature="e#9501#10034#0" expanded="false" />
-            <element signature="e#10098#11049#0" expanded="false" />
-            <element signature="e#11101#11261#0" expanded="false" />
-            <element signature="e#11350#11666#0" expanded="false" />
-            <element signature="e#11758#12556#0" expanded="false" />
-            <element signature="e#12604#13336#0" expanded="false" />
-            <element signature="e#13428#15070#0" expanded="false" />
-            <element signature="e#15182#16045#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -847,19 +788,72 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cumulatives_baseline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="4" column="41" lean-forward="true" selection-start-line="4" selection-start-column="41" selection-end-line="4" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
           <caret line="19" column="5" lean-forward="false" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/facet_diagnostics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2574">
+          <caret line="77" column="61" lean-forward="true" selection-start-line="77" selection-start-column="61" selection-end-line="77" selection-end-column="61" />
+          <folding>
+            <element signature="e#94#113#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/from_pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="640">
+          <caret line="110" column="44" lean-forward="true" selection-start-line="110" selection-start-column="44" selection-end-line="110" selection-end-column="44" />
+          <folding>
+            <element signature="e#108#160#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/add_action_counts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1402">
+          <caret line="130" column="31" lean-forward="true" selection-start-line="130" selection-start-column="31" selection-end-line="130" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cumulatives_baseline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-722">
+          <caret line="4" column="41" lean-forward="true" selection-start-line="4" selection-start-column="41" selection-end-line="4" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/trajectories_crystal_island.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="84">
+          <caret line="56" column="74" lean-forward="false" selection-start-line="56" selection-start-column="74" selection-end-line="56" selection-end-column="74" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#286#526#0" expanded="false" />
+            <element signature="e#669#2248#0" expanded="false" />
+            <element signature="e#2331#2606#0" expanded="false" />
+            <element signature="e#2688#3313#0" expanded="false" />
+            <element signature="e#9106#9526#0" expanded="false" />
+            <element signature="e#9583#10116#0" expanded="false" />
+            <element signature="e#10180#11131#0" expanded="false" />
+            <element signature="e#11183#11343#0" expanded="false" />
+            <element signature="e#11432#11748#0" expanded="false" />
+            <element signature="e#11840#12638#0" expanded="false" />
+            <element signature="e#12686#13418#0" expanded="false" />
+            <element signature="e#13510#15152#0" expanded="false" />
+            <element signature="e#15264#16127#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>

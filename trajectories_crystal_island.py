@@ -54,14 +54,14 @@ def calculate_error(prediction, subject, response_data, response_variable):
     return true_value - prediction
 
 
-def generate_time_series_indices(time_stamps, total_seconds, interval=1):
+def generate_time_series_indices(time_stamps, total_seconds, interval=10):
     """Passing the TimeStamps of a student's events dataframe and total seconds, generate sequence indices for distance calculations"""
     start_time = parse(time_stamps.iloc[0])
-    time_intervals = [start_time + datetime.timedelta(seconds=i) for i in range(int(total_seconds / interval))]
+    time_intervals = [start_time + datetime.timedelta(seconds=i*interval) for i in range(int(total_seconds / interval))]
     sequence_indices = []
     sequence_counter = 0
     for i in range(len(time_intervals)):
-        while sequence_counter < len(time_stamps) and parse(time_stamps[sequence_counter + 1]) < time_intervals[i]:
+        while sequence_counter + 1 < len(time_stamps) and parse(time_stamps.iloc[sequence_counter + 1]) < time_intervals[i]:
             sequence_counter += 1
         sequence_indices.append(sequence_counter)
     return sequence_indices
@@ -69,8 +69,8 @@ def generate_time_series_indices(time_stamps, total_seconds, interval=1):
 
 def determine_seconds(one_times, two_times, length_mismatch):
     """Helper function that uses differences in times to determine total seconds that need to be discretized into indices"""
-    seq_one_time = (parse(one_times["TimeStamp"].iloc[-1]) - parse(one_times["TimeStamp"].iloc[0])).total_seconds()
-    seq_two_time = (parse(two_times["TimeStamp"].iloc[-1]) - parse(two_times["TimeStamp"].iloc[0])).total_seconds()
+    seq_one_time = (parse(one_times.iloc[-1]) - parse(one_times.iloc[0])).total_seconds()
+    seq_two_time = (parse(two_times.iloc[-1]) - parse(two_times.iloc[0])).total_seconds()
     if length_mismatch == "minimum":
         seconds = min(seq_one_time, seq_two_time)
     elif length_mismatch == "padded":
@@ -160,6 +160,8 @@ def create_dist_dict(data, distance_features, omit_list, time_based=False, lengt
                                                     length_mismatch=length_mismatch)
             dist_dict[(subjects[outer_index], subjects[inner_index])] = {"Distance":dist, "Std":std, "Max":max_d}
             dist_dict[(subjects[inner_index], subjects[outer_index])] = {"Distance":dist, "Std":std, "Max":max_d}
+        if show:
+            print("Finished subject %s at %s" % (subjects[outer_index], datetime.datetime.now()))
     if show:
         print("Finished creating distance dictionary in %.4f minutes" % ((datetime.datetime.now() - start_time).total_seconds()/60.0))
     return dist_dict
@@ -399,7 +401,8 @@ if __name__ == "__main__":
                            distance_features=predict_arguments["Distance Predict Features"],
                            omit_list=non_full_omit_list,
                            time_based=predict_arguments["Distance Time Type"],
-                           length_mismatch=predict_arguments["Distance Mismatch"])
+                           length_mismatch=predict_arguments["Distance Mismatch"],
+                         show=True)
 
     all_errors = []
     full_subject_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" in e]
