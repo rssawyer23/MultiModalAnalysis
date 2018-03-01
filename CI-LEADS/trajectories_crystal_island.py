@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 from dateutil.parser import parse
 import datetime
 import matplotlib.patches as mpatches
+import pickle
+from sklearn.linear_model import LinearRegression
+from matplotlib.collections import LineCollection
+import trajectories_by_phase as tbp
 
 
 def _expand_sequence(seq, extra):
@@ -81,7 +85,7 @@ def determine_seconds(one_times, two_times, length_mismatch):
     return seconds
 
 
-def series_distance(seq_one, seq_two, distance_features, length_mismatch="minimum"):
+def series_distance(seq_one, seq_two, distance_features, length_mismatch="padded"):
     """Calculating the distance using the timestamps instead of sequence index"""
     total_seconds = determine_seconds(seq_one["TimeStamp"], seq_two["TimeStamp"], length_mismatch)
     seq_one_indices = generate_time_series_indices(time_stamps=seq_one["TimeStamp"], total_seconds=total_seconds)
@@ -97,7 +101,25 @@ def series_distance(seq_one, seq_two, distance_features, length_mismatch="minimu
     return np.mean(distances), np.std(distances), np.max(distances)
 
 
-def sequence_distance(seq_one, seq_two, length_mismatch="minimum"):
+def series_distance_endpoints(seq_one, seq_two, distance_features, time_interval=10, length_mismatch='padded'):
+    total_seconds = determine_seconds(seq_one["TimeStamp"], seq_two["TimeStamp"], length_mismatch)
+    seq_one_indices = generate_time_series_indices(time_stamps=seq_one["TimeStamp"], total_seconds=total_seconds)
+    seq_two_indices = generate_time_series_indices(time_stamps=seq_two["TimeStamp"], total_seconds=total_seconds)
+    assert len(seq_one_indices) == len(seq_two_indices)
+
+    reduced_one = np.array(seq_one.loc[:, distance_features])
+    reduced_two = np.array(seq_two.loc[:, distance_features])
+
+    lines = []
+    for i in range(len(seq_one_indices)):
+        x = (i) * time_interval
+        s1_point = (x, reduced_one[seq_one_indices[i], :])
+        s2_point = (x, reduced_two[seq_two_indices[i], :])
+        lines.append([s1_point, s2_point])
+    return lines
+
+
+def sequence_distance(seq_one, seq_two, length_mismatch="padded"):
     """Calculating distances using the sequence index, with two methods of handling length mismatches"""
     if length_mismatch == "minimum":
         # Truncate the longer sequence so same indices are compared
@@ -143,7 +165,6 @@ def get_subject_distance(data, subject_one, subject_two, distance_features, time
 
 
 def create_dist_dict(data, distance_features, omit_list, time_based=False, length_mismatch="minimum", show=False):
-    # TODO Pickle this so it does not need to be recreated each time, possibly include metadata for arguments
     """Create a 'distance dictionary' which maps pairs of test subjects to distance, variance pairs
             This is essentially a distance matrix represented by a dictionary for indexing purposes"""
     start_time = datetime.datetime.now()
@@ -208,7 +229,7 @@ def fit_pca(pca_obj, event_df, feature_list, omit_list):
     subject_df = subject_df.T
 
     # subject_df.index = subjects
-    # subject_df.to_csv("C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryCumulatives.csv", index=True)
+    # subject_df.to_csv("C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryCumulativesP.csv", index=True)
 
     scaler = StandardScaler()
     pca_obj.fit(scaler.fit_transform(subject_df))
@@ -237,24 +258,29 @@ def _get_color(subject, add_data, color_by, max_color_by_val=1, min_color_prop=0
     if np.sum(add_rows) != 1:
         print("Invalid Add Data for %s" % subject)
         return tuple([0.0, 0.0, 0.0])
+    elif color_by == "Condition":
+        if "1301" in subject:
+            color_tuple = tuple([0.0,0.0,1.0])
+        else:
+            color_tuple = tuple([0.5,0.5,0.0])
     else:
         subject_color_val = add_data.loc[add_rows, color_by].iloc[0]
         prop_val = _get_prop_value(color_val=subject_color_val, max_color_val=max_color_by_val,
-                                   min_color_prop=min_color_prop, reverse_fill=True)
+                                   min_color_prop=min_color_prop, reverse_fill=False)
         if subject_color_val > 0:
             color_tuple = tuple([0.0, prop_val, 0.0])
         elif subject_color_val < 0:
             color_tuple = tuple([prop_val, 0.0, 0.0])
         else:
             color_tuple = tuple([0.0,0.0,0.0])
-        return color_tuple
+    return color_tuple
 
 
-def _get_legend_handles(golden_present):
-    lowest = mpatches.Patch(color=tuple([_get_prop_value(-1.0, 1.0, 0.6, True), 0.0, 0.0]), label="Lowest NLG")
-    low = mpatches.Patch(color=tuple([_get_prop_value(-0.4, 1.0, 0.6, True), 0.0, 0.0]), label="Low NLG")
-    highest = mpatches.Patch(color=tuple([0.0, _get_prop_value(1.0, 1.0, 0.6, True), 0.0]), label="Highest NLG")
-    high = mpatches.Patch(color=tuple([0.0, _get_prop_value(0.4, 1.0, 0.6, True), 0.0]), label="High NLG")
+def _get_legend_handles(golden_present, reverse_fill=False):
+    lowest = mpatches.Patch(color=tuple([_get_prop_value(-1.0, 1.0, 0.6, reverse_fill), 0.0, 0.0]), label="Lowest NLG")
+    low = mpatches.Patch(color=tuple([_get_prop_value(-0.4, 1.0, 0.6, reverse_fill), 0.0, 0.0]), label="Low NLG")
+    highest = mpatches.Patch(color=tuple([0.0, _get_prop_value(1.0, 1.0, 0.6, reverse_fill), 0.0]), label="Highest NLG")
+    high = mpatches.Patch(color=tuple([0.0, _get_prop_value(0.4, 1.0, 0.6, reverse_fill), 0.0]), label="High NLG")
     none = mpatches.Patch(color=tuple([0.0,0.0,0.0]), label="No Learning Gain")
     gold = mpatches.Patch(color=tuple([0.83, 0.88, 0.13]), label="Golden Path")
     if golden_present:
@@ -263,12 +289,118 @@ def _get_legend_handles(golden_present):
         return [highest, high, none, low, lowest]
 
 
+def plot_trajectory_example(x, y, data, add_data, color_by, subject, golden, save_file):
+    """Function for plotting trajectories using the x and y as names of data to plot and color_by for shading the lines"""
+    fig, ax = plt.subplots(1)
+    ax.set_xlabel("Game Time (seconds)")
+    ax.set_ylabel("Filtered Cumulative Action Value")
+    ax.set_title("Gameplay Phase Endpoint Example")
+    ax.set_xlim(left=0, right=10000)
+    ax.set_ylim(bottom=0, top=70)
+
+    subject_rows = data.loc[:, "TestSubject"] == subject
+    subject_data = data.loc[subject_rows, :]
+    subject_start_time = parse(subject_data.loc[:, "TimeStamp"].iloc[0])
+    subject_data["DurationElapsed"] = subject_data.loc[:, "TimeStamp"].apply(lambda cell: (parse(cell) - subject_start_time).total_seconds())
+
+    last_time = subject_data["DurationElapsed"].iloc[-1]
+    extra_seconds = golden["GameTime"].iloc[-1] - last_time
+    extended_x = [last_time + (i+1) * 10 for i in range(int(extra_seconds/10)+1)]
+
+    # plot_x = np.array(list(subject_data.loc[:, x]) + extended_x)
+    # plot_y = np.array(_expand_sequence(subject_data.loc[:, y].values.reshape(-1, 1), extra=len(extended_x)))
+    plot_x = np.array(subject_data.loc[:, x])
+    plot_y = np.array(subject_data.loc[:, y])
+    color = _get_color(subject, add_data, color_by)
+    ax.plot(plot_x, plot_y, color=color, linestyle="solid", linewidth=0.5, label="Example Student")
+
+    # Plot the padded portion of the series in a different color/style
+    # ext_x = np.array(extended_x)
+    # ext_y = np.array(_expand_sequence(subject_data.loc[:, y].values.reshape(-1, 1), extra=len(extended_x)))[-len(extended_x):, :]
+    # ext_col = tuple([0.,0.4,0.1])
+    # ax.plot(ext_x, ext_y, color=ext_col, linestyle="dashed", linewidth=0.75)
+
+    line_segments = series_distance_endpoints(seq_one=golden.loc[:, [y] + ["TimeStamp"]],
+                                              seq_two=subject_data,
+                                              distance_features=[y],
+                                              length_mismatch='padded')
+    final_x = golden["GameTime"].iloc[-1]
+    final_line = [[(final_x, subject_data[y].iloc[-1]), (final_x, golden[y].iloc[-1])]]
+
+    student_lm = LinearRegression(fit_intercept=False)
+    student_lm.fit(X=np.array(subject_data.loc[:, "DurationElapsed"].reshape(-1, 1)) / 60,
+                   y=np.array(subject_data.loc[:, "PC1"]))
+
+
+    # fc = LineCollection(final_line, color=tuple([0.1,0.1,0.9]), linewidths=1.0)
+    # ax.add_collection(fc)
+    #
+    # final_line = [(final_x, subject_data[y].iloc[-1]), (final_x, golden[y].iloc[-1])]
+
+    # reduced_lines = [line_segments[i] for i in range(len(line_segments)) if i % 3 == 0]
+    # reduced_lines.append(final_line)
+    # line_segments.append(final_line)
+    # lc = LineCollection(line_segments, color=tuple([0.3]*4), linewidths=0.2)
+    # ax.add_collection(lc)
+
+    if x == "DurationElapsed":
+        x = "GameTime"
+
+    plot_x = np.array(golden.loc[:, x])
+    plot_y = np.array(golden.loc[:, y])
+    gold_color = tuple([0.83, 0.88, 0.13])
+    ax.plot(plot_x, plot_y, color=gold_color, linestyle="solid", linewidth=1.0, label="Gold Path")
+
+    gold_lm = LinearRegression(fit_intercept=False)
+    gold_lm.fit(X=np.array(golden.loc[:, "GameTime"].reshape(-1, 1))/60, y=np.array(golden.loc[:, "PC1"]))
+
+    # Plot the end points of each phase on the time series
+    student_x, student_y = tbp.get_subject_phase_scatter(subject_data)
+    print(student_x, student_y)
+    gold_x, gold_y = tbp.get_subject_phase_scatter(golden, x="GameTime")
+    phase_colors = [tuple([0.8,0.8,0.8]), tuple([0.45,0.45,0.45]), tuple([0, 0, 0])]
+    ax.scatter(student_x, student_y, color=phase_colors)
+    ax.scatter(gold_x, gold_y, color=phase_colors)
+
+    # # Plotting the best fit line for the full gameplay
+    # end_x = 7000
+    # end_y = student_lm.coef_[0] * (end_x/60)
+    # slope_line = [[(0, 0), (end_x, end_y)]]
+    # sc = LineCollection(slope_line, color=color, linestyles='dashed', linewidths=1.0, label="Example Best Fit Line")
+    # ax.add_collection(sc)
+    # ax.text(x=end_x - 500, y=end_y + 2, s="Slope (per min): %.3f" % student_lm.coef_[0])
+    #
+    # # Plotting the best fit line for the golden path full gameplay
+    # end_gy = gold_lm.coef_[0] * (end_x/60)
+    # gold_line = [[(0, 0), (end_x, end_gy)]]
+    # gc = LineCollection(gold_line, color=gold_color, linestyle='dashed', linewidths=1.0, label="Gold Path Best Line")
+    # ax.add_collection(gc)
+    # ax.text(x=end_x - 500, y=end_gy + 2, s="Slope (per min): %.3f" % gold_lm.coef_[0])
+
+    # Manually creating legend handler
+    student = mpatches.Patch(color=color, label="Example Student")
+    gold = mpatches.Patch(color=tuple([0.83, 0.88, 0.13]), label="Gold Path")
+    distance = mpatches.Patch(color=tuple([0.3]*4), label="Temporal Distance")
+    baseline = mpatches.Patch(color=tuple([0.1,0.1,0.9]), label="Baseline Distance")
+    padding = mpatches.Patch(color=tuple([0.1,0.4,0.1]), label="Padded Series")
+    tutorial = mpatches.Patch(color=tuple([0.8, 0.8, 0.8]), label="Tutorial End")
+    prescan = mpatches.Patch(color=tuple([0.45, 0.45, 0.45]), label="Information Gathering End")
+    postscan = mpatches.Patch(color=tuple([0, 0, 0]), label="Diagnosis End")
+    legend_handles = [tutorial, prescan, postscan, student, gold]
+    ax.legend(handles=legend_handles, loc=1)
+
+    print("Plotted Example Trajectories")
+    fig.savefig(save_file)
+    plt.close()
+
+
 def plot_trajectories(x, y, data, add_data, color_by, omit_list, golden, save_file):
     """Function for plotting trajectories using the x and y as names of data to plot and color_by for shading the lines"""
     fig, ax = plt.subplots(1)
-    ax.set_xlabel(x)
-    ax.set_ylabel(y)
+    ax.set_xlabel("Game Time (seconds)")
+    ax.set_ylabel("Filtered Cumulative Action Value")
     ax.set_title("Crystal Island Student Trajectories")
+    ax.set_xlim(left=0, right=10000)
     subjects = [e for e in list(data.loc[:, "TestSubject"].unique()) if e not in omit_list and pd.notna(e)]
     invalid_count = 0
     for subject in subjects:
@@ -284,6 +416,8 @@ def plot_trajectories(x, y, data, add_data, color_by, omit_list, golden, save_fi
         else:
             invalid_count += 1
 
+    if x == "DurationElapsed":
+        x = "GameTime"
     if x in golden.columns and y in golden.columns:
         golden_present = True
         plot_x = np.array(golden.loc[:, x])
@@ -293,7 +427,13 @@ def plot_trajectories(x, y, data, add_data, color_by, omit_list, golden, save_fi
     else:
         golden_present = False
 
-    legend_handles = _get_legend_handles(golden_present)
+    if color_by != "Condition":
+        legend_handles = _get_legend_handles(golden_present)
+    else:
+        full = mpatches.Patch(color=tuple([0.0,0.0,1.0]), label="Full")
+        partial = mpatches.Patch(color=tuple([0.5, 0.5, 0]), label="Partial")
+        gold = mpatches.Patch(color=tuple([0.83, 0.88, 0.13]), label="Golden Path")
+        legend_handles = [full, partial, gold]
     ax.legend(handles=legend_handles, loc=4)
 
     print("Plotted %d Trajectories" % (len(subjects) - invalid_count))
@@ -301,17 +441,47 @@ def plot_trajectories(x, y, data, add_data, color_by, omit_list, golden, save_fi
     plt.close()
 
 
-def get_reference_path_distances(reference_df, other_df, omit_list, distance_features, length_mismatch):
+def get_subject_slopes(data, omit_list, golden, save_file):
+    subjects = [e for e in list(data.loc[:, "TestSubject"].unique()) if e not in omit_list and pd.notna(e)]
+    student_slopes = pd.Series(index=subjects)
+    for subject in subjects:
+        subject_rows = data.loc[:, "TestSubject"] == subject
+        subject_data = data.loc[subject_rows, :]
+        if subject_data.shape[0] > 10:
+            subject_start_time = parse(subject_data.loc[:, "TimeStamp"].iloc[0])
+            subject_data["DurationElapsed"] = subject_data.loc[:, "TimeStamp"].apply(lambda cell: (parse(cell) - subject_start_time).total_seconds())
+            subject_lm = LinearRegression(fit_intercept=False)
+            subject_lm.fit(X=np.array(subject_data.loc[:,"DurationElapsed"].reshape(-1,1))/60, y=np.array(subject_data.loc[:,"PC1"]))
+            student_slopes[subject] = subject_lm.coef_[0]
+
+    gold_name = golden.loc[:, "TestSubject"].iloc[0]
+    gold_lm = LinearRegression(fit_intercept=False)
+    gold_lm.fit(X=np.array(golden.loc[:, "GameTime"].reshape(-1, 1))/60, y=np.array(golden.loc[:, "PC1"]))
+    student_slopes[gold_name] = gold_lm.coef_[0]
+    print(gold_lm.coef_[0])
+    subject_df = pd.DataFrame(student_slopes, columns=["Slope"])
+    subject_df["TestSubject"] = subject_df.index
+    subject_df.to_csv(save_file, index=False)
+    return student_slopes
+
+
+def get_reference_path_distances(reference_df, other_df, omit_list, distance_features, time_based, length_mismatch):
     start_time = datetime.datetime.now()
     print("Started creating distance dictionary: %s" % start_time)
     subjects = [e for e in list(other_df["TestSubject"].unique()) if e not in omit_list]
     dist_df = pd.DataFrame()
     for subject in subjects:
         subject_rows = other_df.loc[:, "TestSubject"] == subject
-        subject_data = other_df.loc[subject_rows, distance_features]
-        subj_avg, subj_std, subj_max = sequence_distance(seq_one=reference_df.loc[:, distance_features],
+        subject_data = other_df.loc[subject_rows, distance_features + ["TimeStamp"]]
+        if not time_based:
+            subj_avg, subj_std, subj_max = sequence_distance(seq_one=reference_df.loc[:, distance_features],
                                                  seq_two=subject_data,
-                                                 length_mismatch=length_mismatch)  # Returns (average, std) tuple
+                                                 length_mismatch=length_mismatch)
+        else:
+            subj_avg, subj_std, subj_max = series_distance(seq_one=reference_df.loc[:, distance_features + ["TimeStamp"]],
+                                                           seq_two=subject_data,
+                                                           distance_features=distance_features,
+                                                           length_mismatch=length_mismatch)
         dist_df[subject] = pd.Series([subj_avg, subj_std, subj_max])
     dist_df = dist_df.T
     dist_df.index = subjects
@@ -322,9 +492,14 @@ if __name__ == "__main__":
     directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/"
     event_seq_filename = directory + "EventSequence/EventSequence_wCGS_NoAOI.csv"
     act_sum_filename = directory + "ActivitySummary/ActivitySummaryGraded.csv"
-    image_output_filename = directory + "ActivitySummary/Trajectories.png"
-    golden_events_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathEventSequence_wC.csv"
-    golden_distance_output = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathDistances.csv"
+    image_output_filename = directory + "ActivitySummary/TrajectoriesTempDistExample.png"
+    distance_dictionary_pickle = directory + "EventSequence/DistDict.pkl"
+    pickled = True # Should check if file exists to set this boolean
+    golden_events_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathEventSequenceTimeStamp.csv"
+    golden_distance_output = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathDistancesT.csv"
+    slope_output_filename = directory + "ActivitySummary/StudentSlopes.csv"
+    golden_df_intermediate_file = directory + "Intermediate/GoldenDF.csv"
+    full_df_intermediate_file = directory + "Intermediate/FullDF.csv"
 
     golden_events = pd.read_csv(golden_events_filename)
     act_sum = pd.read_csv(act_sum_filename).loc[:, ["TestSubject", "NLG", "FinalGameScore", "Post-Presence", "LearningGain", "Duration"]]
@@ -336,26 +511,32 @@ if __name__ == "__main__":
                          "C-L-Infirmary", "C-L-Lab", "C-L-Dining", "C-L-Dorm", "C-L-Bryce"]
     full_features = action_features + location_features
 
-    predict_arguments = {"Response":"NLG",
-                         "K":5,
-                         "Predict Type":"weighted",
-                         "Distance Features":action_features,
-                         "Distance Predict Features":["PC1"],
-                         "Distance Mismatch":"padded",
-                         "Distance Time Type":True,
-                         "Regularization":0.0}
-
     events = pd.read_csv(event_seq_filename)
     keep_rows = np.logical_and(pd.notnull(events["TimeStamp"]), pd.notnull(events["TestSubject"]))
     events = events.loc[keep_rows, :]
 
     non_full_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e]
+    non_no_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e and "1302" not in e and e != "CI1302PN011"]
+    non_part_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1302" not in e or e == "CI1302PN011"]
+    #non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN124"]
+    non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN057"]
+
+    predict_arguments = {"Response":"NLG",
+                         "K":10,
+                         "Predict Type":"equal",
+                         "Distance Features":action_features,
+                         "Distance Predict Features":["PC1"],
+                         "Distance Mismatch":"padded",
+                         "Distance Time Type":True,
+                         "Omit List":non_full_omit_list,
+                         "Regularization":0.0}
+
     features = predict_arguments["Distance Features"]
 
     feature_list = _determine_features(list(events.columns.values), features)
     components = 4
     pca_transformer = PCA(n_components=components)
-    scaler = fit_pca(pca_obj=pca_transformer, event_df=events, feature_list=feature_list, omit_list=non_full_omit_list)
+    scaler = fit_pca(pca_obj=pca_transformer, event_df=events, feature_list=feature_list, omit_list=predict_arguments["Omit List"])
     print(np.cumsum(pca_transformer.explained_variance_ratio_)[:components])
     print(pd.DataFrame([pca_transformer.components_[0], pca_transformer.components_[1]], columns=feature_list).T)
 
@@ -364,15 +545,23 @@ if __name__ == "__main__":
     golden_events.index = list(range(golden_events.shape[0]))
     full_golden_df = pd.concat([golden_events, transformed_gp_df], axis=1)
 
+
     transformed_matrix = pca_transformer.transform(events.loc[:, feature_list].fillna(0))
     transformed_df = pd.DataFrame(transformed_matrix, columns=["PC%d" % (n+1) for n in range(transformed_matrix.shape[1])], index=list(range(events.shape[0])))
     events.index = list(range(events.shape[0]))
     full_df = pd.concat([events, transformed_df], axis=1)
 
+    # For generating intermediate dataframes to be used in analysis Output/Intermediate
+    # full_golden_df.to_csv(golden_df_intermediate_file, index=False)
+    # full_agency_rows = full_df["TestSubject"].apply(lambda cell: cell not in non_full_omit_list)
+    # temp_full_df = full_df.loc[full_agency_rows, :]
+    # temp_full_df.to_csv(full_df_intermediate_file, index=False)
+
     # Calculating distances with reference path and outputting dataframe after appending NLG
     # gold_distances = get_reference_path_distances(full_golden_df, full_df,
-    #                                               omit_list=non_full_omit_list,
+    #                                               omit_list=predict_arguments["Omit List"],
     #                                               distance_features=predict_arguments["Distance Predict Features"],
+    #                                               time_based=True,
     #                                               length_mismatch=predict_arguments["Distance Mismatch"])
     # nlg_df = act_sum.loc[:, ["TestSubject", "NLG", "Duration"]]
     # nlg_df.index = nlg_df.loc[:, "TestSubject"]
@@ -381,33 +570,53 @@ if __name__ == "__main__":
     # merged_distances["TestSubject"] = merged_distances.index
     # merged_distances.to_csv(golden_distance_output, index=False)
 
+    # Just a test for distance between subject
     # print(get_subject_distance(full_df,
     #                            subject_one="CI1301PN008",
     #                            subject_two="CI1301PN006",
     #                            distance_features=["PC1", "PC2"],
     #                            length_mismatch="minimum"))
 
+    # print(full_golden_df.columns)
     # plot_trajectories(x="DurationElapsed", y="PC1",
     #                   data=full_df, add_data=act_sum,
     #                   color_by="NLG",
-    #                   omit_list=non_full_omit_list,
+    #                   omit_list=non_example_omit_list,
     #                   golden=full_golden_df,
     #                   save_file=image_output_filename)
+
+    plot_trajectory_example(x="DurationElapsed", y="PC1",
+                            data=full_df, add_data=act_sum,
+                            color_by="NLG",
+                            subject="CI1301PN057",
+                            golden=full_golden_df,
+                            save_file=image_output_filename)
+
+    # subject_slopes = get_subject_slopes(data=full_df,
+    #                                     omit_list=non_no_omit_list,
+    #                                     golden=full_golden_df,
+    #                                     save_file=slope_output_filename)
 
     #distance_features = ["PC1", "PC2", "PC3", "PC4"]
 
     full_df.loc[:, predict_arguments["Distance Features"]] = scaler.transform(X=full_df.loc[:, predict_arguments["Distance Features"]])
-    d = create_dist_dict(full_df,
-                           distance_features=predict_arguments["Distance Predict Features"],
-                           omit_list=non_full_omit_list,
-                           time_based=predict_arguments["Distance Time Type"],
-                           length_mismatch=predict_arguments["Distance Mismatch"],
-                         show=True)
+
+    if pickled:
+        d = pickle.load(open(distance_dictionary_pickle, 'rb'))
+    else:
+        d = create_dist_dict(full_df,
+                               distance_features=predict_arguments["Distance Predict Features"],
+                               omit_list=predict_arguments["Omit List"],
+                               time_based=predict_arguments["Distance Time Type"],
+                               length_mismatch=predict_arguments["Distance Mismatch"],
+                             show=True)
+        pickle.dump(d, open(distance_dictionary_pickle, 'wb'))
 
     all_errors = []
-    full_subject_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" in e]
+    full_subject_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" in e or "1302" in e]
     full_subject_list.remove("CI1301PN042")  # No Pre/Post Data
     full_subject_list.remove("CI1301PN043")  # No Pre/Post Data
+    full_subject_list.remove("CI1302PN011")  # No Pre/Post Data
 
     for subject in full_subject_list:
         s = subject_distances_series(d, subject=subject)
