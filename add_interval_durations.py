@@ -8,16 +8,43 @@ interval_names = ["Tutorial", "PreScan", "PostScan"]
 interval_plots = ["TutorialComplete", "TestObject", "SolvedMystery"]
 
 
+def _get_tutorial_df(event_df):
+    subjects = list(event_df["TestSubject"].unique())
+    non_aoi = event_df["Event"] != "AOI"
+    event_df = event_df.loc[non_aoi, :]
+    event_df.index = list(range(event_df.shape[0]))
+
+    subject_list = []
+    for subject in subjects:
+        subject_rows = event_df["TestSubject"] == subject
+        subject_df = event_df.loc[subject_rows, :]
+        subject_df.index = list(range(subject_df.shape[0]))
+        non_tutorial_rows = subject_df["Location"].apply(lambda cell: str(cell) != "" and str(cell) != "Dock" and "Beach" not in str(cell))
+        subject_non_tutorial_df = subject_df.loc[non_tutorial_rows, :]
+        try:
+            game_time = subject_non_tutorial_df["GameTime"].iloc[0]
+            subject_list.append([subject, game_time])
+        except IndexError:
+            print("Error finding tutorial duration of %s" % subject)
+    tutorial_df = pd.DataFrame(subject_list, columns=["TestSubject", "Duration-Tutorial"])
+    tutorial_df.index = tutorial_df["TestSubject"]
+    return tutorial_df
+
+
+
 def add_interval_durations(event_sequence_filename, activity_summary_filename, output_filename):
     event_df = pd.read_csv(event_sequence_filename)
     act_sum_df = pd.read_csv(activity_summary_filename)
 
     duration_df = act_sum_df.loc[:,["TestSubject"]]
 
-    tutorial_rows = event_df["Name"] == "TutorialComplete"
-    tutorial_df = event_df.loc[tutorial_rows, ["TestSubject", "GameTime"]]
-    tutorial_df.columns = ["TestSubject", "Duration-Tutorial"]
-    tutorial_df.index = tutorial_df["TestSubject"]
+    tutorial_df = _get_tutorial_df(event_df)
+
+    # Deprecated since TutorialComplete point is now last time student originally on beach
+    # tutorial_rows = event_df["Name"] == "TutorialComplete"
+    # tutorial_df = event_df.loc[tutorial_rows, ["TestSubject", "GameTime"]]
+    # tutorial_df.columns = ["TestSubject", "Duration-Tutorial"]
+    # tutorial_df.index = tutorial_df["TestSubject"]
 
     pre_scan_rows = event_df["Name"] == "TestObject"
     pre_scan_df = event_df.loc[pre_scan_rows, ["TestSubject", "GameTime"]]

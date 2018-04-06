@@ -146,16 +146,16 @@ def output_FACET_evidence(target_dir, data_extension, facet_event_filename, emot
 
 if __name__ == "__main__":
     facet_type = "/FACET-Z-Score" # works with "/FACET" or "/FACET-Z-Score"
-    target_directory = "C:/Users/robsc/Documents/NC State/GRAWork/IVHData/OutputJan18Neg%s" % facet_type
-    facet_event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/IVHData/OutputJan18Neg/FACET-ThresholdCrossed/FACET-Events.csv"  # GENERATED FROM FACET_EVENT_FILE.PY
+    target_directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318%s" % facet_type
+    facet_event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/FACET-ThresholdCrossed/FACET-Events.csv"  # GENERATED FROM FACET_EVENT_FILE.PY
     merged = True
     student_df = output_FACET_evidence(target_dir=target_directory,
                                        data_extension="%s.csv" % facet_type,
                                        facet_event_filename=facet_event_filename,
-                                       output_diagnostics=False,
-                                       output_correlations=False,
+                                       output_diagnostics=True,
+                                       output_correlations=True,
                                        output_figures=True,
-                                       emotions_to_use=["Confusion", "Joy"],
+                                       emotions_to_use=["Confusion", "Joy", "Frustration"],
                                        include_aus=True,
                                        merged=merged)
     print(student_df)

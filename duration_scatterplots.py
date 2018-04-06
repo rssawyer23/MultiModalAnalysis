@@ -1,3 +1,4 @@
+# Script for plotting duration versus key time series characteristics for EDM2018 paper on trajectories
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

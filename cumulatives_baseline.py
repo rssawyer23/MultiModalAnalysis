@@ -1,3 +1,4 @@
+# Script used for testing predictions from EDM2018 Trajectory paper
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
