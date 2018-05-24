@@ -1,11 +1,7 @@
 import pandas as pd
 import numpy as np
 
-grading_key_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/SurveyGradingScheme.csv"
-post_test_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/CI_PostTest_Data_8-31-17.csv"
-pre_test_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/CI_PreTest_Data_8-31-17.csv"
-activity_summary_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummary.csv"
-output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryGraded.csv"
+
 normalize = True
 show = True
 INVALID_QUESTIONS = []
@@ -36,6 +32,16 @@ def get_survey_names(key_df):
     return surveys
 
 
+def convert_response(resp, key_row):
+    if type(resp) is str:
+        for i in range(key_row["LowRange"], key_row["HighRange"]+1):
+            if key_row[str(i)] == resp:
+                return i
+    else:
+        return resp
+    raise KeyError
+
+
 def grade(student_row, key, survey_names, normalize=True, pre=False):
     # Initialize the grades and counts for each survey and subscale survey
     grades = dict()
@@ -52,7 +58,7 @@ def grade(student_row, key, survey_names, normalize=True, pre=False):
 
     for index, row in key.iterrows():
         try:
-            score = student_row[row["QuestionID"]]
+            score = convert_response(student_row[row["QuestionID"]], row)
             if score < row["LowRange"]:  # Ensure score within bounds, otherwise set to cap
                 score = row["LowRange"]
             elif score > row["HighRange"]:
@@ -117,5 +123,10 @@ def grade_tests(grading_key_filename, post_test_filename, pre_test_filename, act
     joined_df.to_csv(output_filename, index=False)
 
 if __name__ == "__main__":
+    grading_key_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/SurveyGradingScheme.csv"
+    post_test_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CI-REFLECT/REFLECT-2-2018/Reflect-Post-Non-Numeric.csv"
+    pre_test_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CI-REFLECT/REFLECT-2-2018/Reflect-Pre-Non-Numeric.csv"
+    activity_summary_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CI-REFLECT/REFLECT-2-2018/Output/ActivitySummary/ActivitySummary.csv"
+    output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CI-REFLECT/REFLECT-2-2018/Output/ActivitySummary/ActivitySummaryGraded.csv"
     grade_tests(grading_key_filename, post_test_filename, pre_test_filename, activity_summary_filename, output_filename,
                     normalize=normalize, show=show)

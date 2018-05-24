@@ -227,12 +227,12 @@ def fit_pca(pca_obj, event_df, feature_list, omit_list):
         last_subject_row = full_subject_rows.iloc[full_subject_rows.shape[0]-1, :]
         subject_df = pd.concat([subject_df, last_subject_row], axis=1)
     subject_df = subject_df.T
-
-    # subject_df.index = subjects
-    # subject_df.to_csv("C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryCumulativesP.csv", index=True)
+    subject_df.index = subjects
 
     scaler = StandardScaler()
     pca_obj.fit(scaler.fit_transform(subject_df))
+    subject_df["PC1"] = pca_obj.transform(subject_df)[:,0]
+    subject_df.to_csv("C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummaryCumulativesP.csv", index=True)
     return scaler
 
 
@@ -281,7 +281,7 @@ def _get_legend_handles(golden_present, reverse_fill=False):
     low = mpatches.Patch(color=tuple([_get_prop_value(-0.4, 1.0, 0.6, reverse_fill), 0.0, 0.0]), label="Low NLG")
     highest = mpatches.Patch(color=tuple([0.0, _get_prop_value(1.0, 1.0, 0.6, reverse_fill), 0.0]), label="Highest NLG")
     high = mpatches.Patch(color=tuple([0.0, _get_prop_value(0.4, 1.0, 0.6, reverse_fill), 0.0]), label="High NLG")
-    none = mpatches.Patch(color=tuple([0.0,0.0,0.0]), label="No Learning Gain")
+    none = mpatches.Patch(color=tuple([0.0, 0.0, 0.0]), label="No Learning Gain")
     gold = mpatches.Patch(color=tuple([0.83, 0.88, 0.13]), label="Golden Path")
     if golden_present:
         return [highest, high, none, low, lowest, gold]
@@ -489,14 +489,14 @@ def get_reference_path_distances(reference_df, other_df, omit_list, distance_fea
     return dist_df
 
 if __name__ == "__main__":
-    directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/"
-    event_seq_filename = directory + "EventSequence/EventSequence_wCGS_NoAOI.csv"
-    act_sum_filename = directory + "ActivitySummary/ActivitySummaryGraded.csv"
-    image_output_filename = directory + "ActivitySummary/TrajectoriesTempDistExample.png"
+    directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/"
+    event_seq_filename = directory + "EventSequence/EventSequence_noAOI.csv"
+    act_sum_filename = directory + "ActivitySummary/ActivitySummaryAppendedRevisedEdited.csv"  # Edited to make NLG = RevisedNLG
+    image_output_filename = directory + "ActivitySummary/TrajectoriesRevised.png"
     distance_dictionary_pickle = directory + "EventSequence/DistDict.pkl"
     pickled = True # Should check if file exists to set this boolean
-    golden_events_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathEventSequenceTimeStamp.csv"
-    golden_distance_output = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/GoldenPathDistancesT.csv"
+    golden_events_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/GoldenPathEventSequenceTimeStamp.csv"
+    golden_distance_output = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/EventSequence/GoldenPathDistancesT.csv"
     slope_output_filename = directory + "ActivitySummary/StudentSlopes.csv"
     golden_df_intermediate_file = directory + "Intermediate/GoldenDF.csv"
     full_df_intermediate_file = directory + "Intermediate/FullDF.csv"
@@ -515,15 +515,16 @@ if __name__ == "__main__":
     keep_rows = np.logical_and(pd.notnull(events["TimeStamp"]), pd.notnull(events["TestSubject"]))
     events = events.loc[keep_rows, :]
 
-    non_full_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e]
-    non_no_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e and "1302" not in e and e != "CI1302PN011"]
-    non_part_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1302" not in e or e == "CI1302PN011"]
-    #non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN124"]
-    non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN057"]
+    always_omit = ["CI1301PN035", "CI1301PN073", "CI1302PN011"]
+    non_full_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e] + always_omit
+    non_no_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" not in e and "1302" not in e and e != "CI1302PN011"] + always_omit
+    non_part_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if "1302" not in e or e == "CI1302PN011"] + always_omit
+    #non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN124"] + always_omit
+    non_example_omit_list = [e for e in list(act_sum["TestSubject"].unique()) if e != "CI1301PN057"] + always_omit
 
     predict_arguments = {"Response":"NLG",
-                         "K":10,
-                         "Predict Type":"equal",
+                         "K":60,
+                         "Predict Type":"weighted",
                          "Distance Features":action_features,
                          "Distance Predict Features":["PC1"],
                          "Distance Mismatch":"padded",
@@ -545,30 +546,29 @@ if __name__ == "__main__":
     golden_events.index = list(range(golden_events.shape[0]))
     full_golden_df = pd.concat([golden_events, transformed_gp_df], axis=1)
 
-
     transformed_matrix = pca_transformer.transform(events.loc[:, feature_list].fillna(0))
     transformed_df = pd.DataFrame(transformed_matrix, columns=["PC%d" % (n+1) for n in range(transformed_matrix.shape[1])], index=list(range(events.shape[0])))
     events.index = list(range(events.shape[0]))
     full_df = pd.concat([events, transformed_df], axis=1)
 
     # For generating intermediate dataframes to be used in analysis Output/Intermediate
-    # full_golden_df.to_csv(golden_df_intermediate_file, index=False)
-    # full_agency_rows = full_df["TestSubject"].apply(lambda cell: cell not in non_full_omit_list)
-    # temp_full_df = full_df.loc[full_agency_rows, :]
-    # temp_full_df.to_csv(full_df_intermediate_file, index=False)
+    full_golden_df.to_csv(golden_df_intermediate_file, index=False)
+    full_agency_rows = full_df["TestSubject"].apply(lambda cell: cell not in non_full_omit_list)
+    temp_full_df = full_df.loc[full_agency_rows, :]
+    temp_full_df.to_csv(full_df_intermediate_file, index=False)
 
     # Calculating distances with reference path and outputting dataframe after appending NLG
-    # gold_distances = get_reference_path_distances(full_golden_df, full_df,
-    #                                               omit_list=predict_arguments["Omit List"],
-    #                                               distance_features=predict_arguments["Distance Predict Features"],
-    #                                               time_based=True,
-    #                                               length_mismatch=predict_arguments["Distance Mismatch"])
-    # nlg_df = act_sum.loc[:, ["TestSubject", "NLG", "Duration"]]
-    # nlg_df.index = nlg_df.loc[:, "TestSubject"]
-    # nlg_df.drop(labels="TestSubject", inplace=True, axis=1)
-    # merged_distances = gold_distances.merge(right=nlg_df, how='left', left_index=True, right_index=True)
-    # merged_distances["TestSubject"] = merged_distances.index
-    # merged_distances.to_csv(golden_distance_output, index=False)
+    gold_distances = get_reference_path_distances(full_golden_df, full_df,
+                                                  omit_list=predict_arguments["Omit List"],
+                                                  distance_features=predict_arguments["Distance Predict Features"],
+                                                  time_based=True,
+                                                  length_mismatch=predict_arguments["Distance Mismatch"])
+    nlg_df = act_sum.loc[:, ["TestSubject", "NLG", "Duration"]]
+    nlg_df.index = nlg_df.loc[:, "TestSubject"]
+    nlg_df.drop(labels="TestSubject", inplace=True, axis=1)
+    merged_distances = gold_distances.merge(right=nlg_df, how='left', left_index=True, right_index=True)
+    merged_distances["TestSubject"] = merged_distances.index
+    merged_distances.to_csv(golden_distance_output, index=False)
 
     # Just a test for distance between subject
     # print(get_subject_distance(full_df,
@@ -578,73 +578,75 @@ if __name__ == "__main__":
     #                            length_mismatch="minimum"))
 
     # print(full_golden_df.columns)
-    # plot_trajectories(x="DurationElapsed", y="PC1",
-    #                   data=full_df, add_data=act_sum,
-    #                   color_by="NLG",
-    #                   omit_list=non_example_omit_list,
-    #                   golden=full_golden_df,
-    #                   save_file=image_output_filename)
+    plot_trajectories(x="DurationElapsed", y="PC1",
+                      data=full_df, add_data=act_sum,
+                      color_by="NLG",
+                      omit_list=non_full_omit_list,
+                      golden=full_golden_df,
+                      save_file=image_output_filename)
 
-    plot_trajectory_example(x="DurationElapsed", y="PC1",
-                            data=full_df, add_data=act_sum,
-                            color_by="NLG",
-                            subject="CI1301PN057",
-                            golden=full_golden_df,
-                            save_file=image_output_filename)
+    # plot_trajectory_example(x="DurationElapsed", y="PC1",
+    #                         data=full_df, add_data=act_sum,
+    #                         color_by="NLG",
+    #                         subject="CI1301PN057",
+    #                         golden=full_golden_df,
+    #                         save_file=image_output_filename)
 
-    # subject_slopes = get_subject_slopes(data=full_df,
-    #                                     omit_list=non_no_omit_list,
-    #                                     golden=full_golden_df,
-    #                                     save_file=slope_output_filename)
+    subject_slopes = get_subject_slopes(data=full_df,
+                                        omit_list=non_no_omit_list,
+                                        golden=full_golden_df,
+                                        save_file=slope_output_filename)
 
     #distance_features = ["PC1", "PC2", "PC3", "PC4"]
 
+
+
     full_df.loc[:, predict_arguments["Distance Features"]] = scaler.transform(X=full_df.loc[:, predict_arguments["Distance Features"]])
+    #
+    # if pickled:
+    #     d = pickle.load(open(distance_dictionary_pickle, 'rb'))
+    # else:
+    #     d = create_dist_dict(full_df,
+    #                            distance_features=predict_arguments["Distance Predict Features"],
+    #                            omit_list=predict_arguments["Omit List"],
+    #                            time_based=predict_arguments["Distance Time Type"],
+    #                            length_mismatch=predict_arguments["Distance Mismatch"],
+    #                          show=True)
+    #     pickle.dump(d, open(distance_dictionary_pickle, 'wb'))
 
-    if pickled:
-        d = pickle.load(open(distance_dictionary_pickle, 'rb'))
-    else:
-        d = create_dist_dict(full_df,
-                               distance_features=predict_arguments["Distance Predict Features"],
-                               omit_list=predict_arguments["Omit List"],
-                               time_based=predict_arguments["Distance Time Type"],
-                               length_mismatch=predict_arguments["Distance Mismatch"],
-                             show=True)
-        pickle.dump(d, open(distance_dictionary_pickle, 'wb'))
-
-    all_errors = []
-    full_subject_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" in e or "1302" in e]
-    full_subject_list.remove("CI1301PN042")  # No Pre/Post Data
-    full_subject_list.remove("CI1301PN043")  # No Pre/Post Data
-    full_subject_list.remove("CI1302PN011")  # No Pre/Post Data
-
-    for subject in full_subject_list:
-        s = subject_distances_series(d, subject=subject)
-
-        prediction = knn_prediction(s, k=predict_arguments["K"],
-                                    response_data=act_sum,
-                                    response_variable=predict_arguments["Response"],
-                                    predict_type=predict_arguments["Predict Type"],
-                                    regularize_prop=predict_arguments["Regularization"])
-        # print("Prediction for %s: %.4f" % (subject, prediction))
-        error = calculate_error(prediction=prediction,
-                                subject=subject,
-                                response_data=act_sum,
-                                response_variable=predict_arguments["Response"])
-        if pd.notnull(error):
-            all_errors.append(error)
-        # desired_subject = subject
-        # keep_rows = act_sum.loc[:, "TestSubject"] == desired_subject
-        # print(act_sum.loc[keep_rows, :])
-        # print("Error for %s: %.4f" % (subject, error))
-    print("\n-------------------------FINISHED PREDICTING %s---------------------------------" % predict_arguments["Response"])
-    full_subject_rows = act_sum.loc[:,"TestSubject"].apply(lambda sub: sub in full_subject_list)
-    mean_errors = act_sum.loc[full_subject_rows, predict_arguments["Response"]] - act_sum.loc[full_subject_rows, predict_arguments["Response"]].mean()
-    print("Predicted: %d\tTotal: %d" % (len(all_errors), np.sum(full_subject_rows)))
-    print("MAE: %.4f\tmMAE: %.4f" % (np.mean(np.abs(all_errors)), np.mean(np.abs(mean_errors))))
-    print("MSE: %.4f\tmMSE: %.4f" % ((np.mean(np.array(all_errors)**2)), (np.mean(np.array(mean_errors)**2))))
-    rss = np.sum(np.array(all_errors)**2)
-    tss = np.sum(mean_errors**2)
-    print("RSS: %.4f" % rss)
-    print("TSS: %.4f" % tss)
-    print("R2: %.4f" % (1.0 - rss/tss))
+    # all_errors = []
+    # full_subject_list = [e for e in list(act_sum["TestSubject"].unique()) if "1301" in e and e not in non_full_omit_list]
+    # full_subject_list.remove("CI1301PN042")  # No Pre/Post Data
+    # full_subject_list.remove("CI1301PN043")  # No Pre/Post Data
+    # # full_subject_list.remove("CI1302PN011")  # No Pre/Post Data
+    #
+    # for subject in full_subject_list:
+    #     s = subject_distances_series(d, subject=subject)
+    #
+    #     prediction = knn_prediction(s, k=predict_arguments["K"],
+    #                                 response_data=act_sum,
+    #                                 response_variable=predict_arguments["Response"],
+    #                                 predict_type=predict_arguments["Predict Type"],
+    #                                 regularize_prop=predict_arguments["Regularization"])
+    #     # print("Prediction for %s: %.4f" % (subject, prediction))
+    #     error = calculate_error(prediction=prediction,
+    #                             subject=subject,
+    #                             response_data=act_sum,
+    #                             response_variable=predict_arguments["Response"])
+    #     if pd.notnull(error):
+    #         all_errors.append(error)
+    #     # desired_subject = subject
+    #     # keep_rows = act_sum.loc[:, "TestSubject"] == desired_subject
+    #     # print(act_sum.loc[keep_rows, :])
+    #     # print("Error for %s: %.4f" % (subject, error))
+    # print("\n-------------------------FINISHED PREDICTING %s---------------------------------" % predict_arguments["Response"])
+    # full_subject_rows = act_sum.loc[:,"TestSubject"].apply(lambda sub: sub in full_subject_list)
+    # mean_errors = act_sum.loc[full_subject_rows, predict_arguments["Response"]] - act_sum.loc[full_subject_rows, predict_arguments["Response"]].mean()
+    # print("Predicted: %d\tTotal: %d" % (len(all_errors), np.sum(full_subject_rows)))
+    # print("MAE: %.4f\tmMAE: %.4f" % (np.mean(np.abs(all_errors)), np.mean(np.abs(mean_errors))))
+    # print("MSE: %.4f\tmMSE: %.4f" % ((np.mean(np.array(all_errors)**2)), (np.mean(np.array(mean_errors)**2))))
+    # rss = np.sum(np.array(all_errors)**2)
+    # tss = np.sum(mean_errors**2)
+    # print("RSS: %.4f" % rss)
+    # print("TSS: %.4f" % tss)
+    # print("R2: %.4f" % (1.0 - rss/tss))

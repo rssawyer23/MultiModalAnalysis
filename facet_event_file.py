@@ -5,12 +5,6 @@ from dateutil.parser import parse
 # event_filename should be EventSequence.csv file, which is unchanged (and is only used for the header)
 # output_filename is the EventSequence-like file of FACET-ThresholdCrossed.csv file
 
-input_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/FACET-ThresholdCrossed/FACET-ThresholdCrossed.csv"
-only_positives = True
-duration_min = 0.5
-output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/FACET-ThresholdCrossed/FACET-Events.csv"
-event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequence.csv"
-
 
 # To generalize headers instead of using specific indices
 def index_dictionary(header_line, extras):
@@ -94,7 +88,18 @@ def create_facet_event_file(facet_thresh_filename, facet_event_filename, event_f
 
             prev_test_subject = test_subject
         minutes_elapsed = (datetime.now() - start_time).total_seconds() / 60.
-        print("Successfully created %s in %.3f minutes" % (output_filename, minutes_elapsed))
+        print("Successfully created %s in %.3f minutes" % (facet_event_filename, minutes_elapsed))
 
 if __name__ == "__main__":
-    create_facet_event_file(input_filename, output_filename, event_filename, only_positives, duration_min)
+    # input_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/FACET-ThresholdCrossed/FACET-ThresholdCrossed.csv"
+    # only_positives = True
+    # duration_min = 0.5
+    # output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/FACET-ThresholdCrossed/FACET-Events.csv"
+    # event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequenceP.csv"
+    #
+    # create_facet_event_file(input_filename, output_filename, event_filename, only_positives, duration_min)
+    create_facet_event_file(facet_thresh_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/TDP/Output/FACET-ThresholdCrossed/FACET-ThresholdCrossed.csv",
+                            facet_event_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/FACET-ThresholdCrossed/FACET-Events-NoAgency.csv",
+                            event_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceP.csv",
+                            only_positives=True,
+                            duration_min=0.05)

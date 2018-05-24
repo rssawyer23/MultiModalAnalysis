@@ -138,15 +138,15 @@ def add_game_score(event_filename, activity_summary, books_articles, appended_ev
     except ValueError:
         pass
     full_act_sum = full_act_sum.merge(right=subject_cumgs, how="left", on="TestSubject")
-    full_act_sum.to_csv(appended_activity_summary, index=False, encoding='ascii', quoting=csv.QUOTE_NONE)
+    full_act_sum.to_csv(appended_activity_summary, index=False)
     finish_time = datetime.datetime.now()
     print("Finished adding game score in %.3f minutes" % ((finish_time - start_time).total_seconds() / 60.0))
 
 
 if __name__ == "__main__":
-    event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequence.csv"
-    activity_summary = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummary.csv"
-    books_articles = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/BooksAndArticles/BooksAndArticles.csv"
-    appended_event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequence_wGS.csv"
-    appended_activity_summary = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummary_wGS.csv"
+    event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/EventSequence/EventSequenceP.csv"
+    activity_summary = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummary.csv"
+    books_articles = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/BooksAndArticles/BooksAndArticles.csv"
+    appended_event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/EventSequence/EventSequence_wGS.csv"
+    appended_activity_summary = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummary_wGS.csv"
     add_game_score(event_filename, activity_summary, books_articles, appended_event_filename, appended_activity_summary)

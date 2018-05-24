@@ -6,9 +6,6 @@ from facet_event_file import index_dictionary
 # event_filename should be EventSequence.csv file, which is unchanged (and is only used for the header)
 # output_filename is the EventSequence file that now includes the FACET events in the proper chronological location
 
-facet_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/FACET-ThresholdCrossed/FACET-Events.csv"
-output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequenceFACET.csv"
-event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequence.csv"
 
 
 def get_line(previous_line, previous_time, previously_written, previous_subject, rfile, ind):
@@ -103,4 +100,12 @@ def merge_event_files(event_filename, facet_filename, event_facet_filename, show
         print("Successfully merged EventSequence and FACET-Events into %s in %.3f minutes" % (output_filename, minutes_elapsed))
 
 if __name__ == "__main__":
-    merge_event_files(event_filename, facet_filename, output_filename, show=True)
+    # facet_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/FACET-ThresholdCrossed/FACET-Events.csv"
+    # output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceFACET.csv"
+    # event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceP.csv"
+    # merge_event_files(event_filename, facet_filename, output_filename, show=True)
+
+    facet_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/FACET-ThresholdCrossed/FACET-Events-All.csv"
+    output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceFACET-All.csv"
+    event_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceP.csv"
+    merge_event_files(event_filename, facet_filename, output_filename)

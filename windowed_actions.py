@@ -13,15 +13,62 @@ ACTION_TYPES = {"KnowledgeAcquisition": ["BooksAndArticles", "PostersLookedAt"],
                 "HypothesisTesting": ["Worksheet", "WorksheetSubmit", "Scanner"]}
 
 
+def detect_book_relevant(event_row, ind, books):
+    """Determine if a book is relevant to the solution or not and return the appropriate suffix"""
+    book_row = np.logical_and(books.loc[:, "TestSubject"] == event_row[ind["TestSubject"]],
+                              books.loc[:, "GameTime"].apply(round, ndigits=2) == round(float(event_row[ind["GameTime"]]), 2))
+    if np.sum(book_row) != 1:
+        print("Error finding %s book at time %s" % (event_row[ind["TestSubject"]], round(float(event_row[ind["GameTime"]]), 2)))
+        return 0.0
+    relevant = books.loc[book_row, "IsReleventToSolution"].iloc[0]
+    suffix = "Relevant" if relevant else "Irrelevant"
+    return suffix
+
+
+def detect_scan_positive(event_row, ind, act_sum):
+    """Determine if a scan is relevant to the solution or not and return the appropriate suffix"""
+    student_row = act_sum.loc[:, "TestSubject"] == event_row[ind["TestSubject"]]
+
+    if np.sum(student_row) != 1:
+        print("Error finding %s book at time %s" % (event_row["TestSubject"], round(float(event_row[ind["GameTime"]]),2)))
+        return 0.0
+
+    student_solution = act_sum.loc[student_row, :].iloc[0]
+    correct_object = student_solution.loc["SolutionObject"] == event_row[ind["ObjectScanned"]]
+    event_type = event_row[ind["TestingFor"]]
+    solution_type = student_solution.loc["InfectionType"]
+    correct_contaminant = event_type == "Viruses" and solution_type == "Viral" or \
+                            event_type == "Bacteria" and solution_type == "Bacterial"
+    suffix = "Positive" if correct_object and correct_contaminant else "Negative"
+    return suffix
+
+
+def relevancy_event_replace(line_split, ind, act_df, book_df):
+    if line_split[ind["Event"]] not in ["Scanner", "BooksAndArticles", "WorksheetSubmit"]:
+        return line_split[ind["Event"]]
+    elif line_split[ind["Event"]] == "Scanner":
+        suffix = detect_scan_positive(line_split, ind, act_df)
+        return "Scan%s" % suffix
+    elif line_split[ind["Event"]] == "BooksAndArticles":
+        suffix = detect_book_relevant(line_split, ind, book_df)
+        return "Book%s" % suffix
+    elif line_split[ind["Event"]] == "WorksheetSubmit":
+        suffix = "Correct" if line_split[ind["WorksheetSubmitResult"]] == "Right" else "Incorrect"
+        return "Submission%s" % suffix
+    else:
+        print("ERROR WITH %s" % line_split[ind["Event"]])
+        return line_split[ind["Event"]]
+
+
 # Data structure for organizing a line (event) into its relevant time and identifying properties
 class data_line:
-    def __init__(self, line, ind, window):
+    def __init__(self, line, ind, window, act_df, book_df):
         line_split = line.replace("\n","").replace("\r","").split(",")
         if len(line_split) < 5:
             self.line_type = "NULL"
         else:
             self.test_subject = line_split[ind["TestSubject"]]
-            self.line_type = line_split[ind["Event"]]
+            self.line_type = relevancy_event_replace(line_split, ind, act_df, book_df)
             try:
                 self.duration = float(line_split[ind["Duration"]])
             except ValueError:
@@ -84,31 +131,44 @@ class student_data:
             try:
                 output_string += self.data[a].get_action_string(ordered_emotions)
             except KeyError:
-                output_string += action_data(a).get_action_string(ordered_emotions)
+                output_string += action_data(a, window_size=5).get_action_string(ordered_emotions)
 
         output_string = output_string[:-1] + "\n"
         ofile.write(output_string)
 
-    def add_action_data(self, action_type, facet_list):
+    def add_action_data(self, action_type, facet_list, window_size):
+        # Add a facet event's data to an action's relevant window
         if action_type.line_type not in self.data.keys():
-            self.data[action_type.line_type] = action_data(action_type.line_type)
+            self.data[action_type.line_type] = action_data(action_type.line_type, window_size)
         for f in facet_list.list:
+            # Revised durations make only duration of facet that occurs during the window count towards the total (duration prop max = 1)
             if action_type.before_start < f.end_during < action_type.start_time or action_type.before_start < f.start_time < action_type.start_time:
-                self.data[action_type.line_type].increment_affect("Before", f.target, f.duration)
+                # Move start to front of window if starts before, Move end to end of window if ends after
+                adjusted_start = f.start_time if f.start_time > action_type.before_start else action_type.before_start
+                adjusted_end = f.end_during if f.end_during < action_type.start_time else action_type.start_time
+                revised_duration = (adjusted_end - adjusted_start).total_seconds()
+                self.data[action_type.line_type].increment_affect("Before", f.target, revised_duration)
             if action_type.start_time < f.end_during < action_type.end_during or action_type.start_time < f.start_time < action_type.end_during:
-                self.data[action_type.line_type].increment_affect("During", f.target, f.duration)
+                adjusted_start = f.start_time if f.start_time > action_type.start_time else action_type.start_time
+                adjusted_end = f.end_during if f.end_during < action_type.end_during else action_type.end_during
+                revised_duration = (adjusted_end - adjusted_start).total_seconds()
+                self.data[action_type.line_type].increment_affect("During", f.target, revised_duration)
             if action_type.end_during < f.end_during < action_type.end_after or action_type.end_during < f.start_time < action_type.end_after:
-                self.data[action_type.line_type].increment_affect("After", f.target, f.duration)
+                adjusted_start = f.start_time if f.start_time > action_type.end_during else action_type.end_during
+                adjusted_end = f.end_during if f.end_during < action_type.end_after else action_type.end_after
+                revised_duration = (adjusted_end - adjusted_start).total_seconds()
+                self.data[action_type.line_type].increment_affect("After", f.target, revised_duration)
         self.data[action_type.line_type].increment(action_type.duration)
 
 
 # Data structure for keeping track of emotions for each action
 # Before, During, After intervals around each action
 class action_data:
-    def __init__(self, name):
+    def __init__(self, name, window_size):
         self.name = name
         self.occurrences = 0
         self.duration = 0
+        self.window_size = window_size
         self.data = dict()
         self.data["Before"] = dict()
         self.data["During"] = dict()
@@ -129,9 +189,14 @@ class action_data:
     def get_action_string(self, ordered_emotions):
         to_return = ""
         for e in ordered_emotions:
-            for i in ["Before","During","After"]:
+            for i in ["Before", "During", "After"]:
                 try:
-                    to_return += "%.4f,%.4f," % (self.data[i][e][0]/float(self.occurrences), self.data[i][e][1]/float(self.duration))
+                    if i == "During":
+                        to_return += "%.4f,%.4f," % (self.data[i][e][0]/float(self.occurrences),
+                                                     self.data[i][e][1]/float(self.duration))
+                    else:
+                        to_return += "%.4f,%.4f," % (self.data[i][e][0]/float(self.occurrences),
+                                                    self.data[i][e][1]/float(self.occurrences * self.window_size))
                 except KeyError:
                     to_return += "0,0,"
         to_return += "%d," % self.occurrences
@@ -204,15 +269,20 @@ def add_categorized_columns(windowed_file, output_filename, normalize=False, act
     windowed_df.to_csv(output_filename, index=False)
 
 
-def create_windowed_action_file(event_facet_filename, output_filename, window_size, omit_AOIs=True, omit_AUs=True, show=False):
+def create_windowed_action_file(event_facet_filename, output_filename, activity_summary_filename, books_filename, window_size, omit_AOIs=True, omit_AUs=True, show=False):
     start_time = datetime.now()
+
+    act_sum = pd.read_csv(activity_summary_filename)
+    books = pd.read_csv(books_filename)
 
     with open(event_facet_filename, 'r') as ef_file, open(output_filename, 'w') as ofile:
         t_data = pd.read_csv(event_facet_filename, nrows=30000)
         ordered_actions = list(t_data["Event"].unique())
+        ordered_actions += ["ScanPositive", "ScanNegative", "BookRelevant", "BookIrrelevant", "SubmissionCorrect", "SubmissionIncorrect"]
         ordered_emotions = [e for e in list(t_data["Target"].unique().astype(str)) if "Evidence" in e]
-        ordered_actions.remove("FACET")
-        if omit_AOIs:
+        if "FACET" in ordered_actions:
+            ordered_actions.remove("FACET")
+        if omit_AOIs and "AOI" in ordered_actions:
             ordered_actions.remove("AOI")
         if omit_AUs:
             ordered_emotions = [e for e in ordered_emotions if "AU" not in e]
@@ -229,12 +299,12 @@ def create_windowed_action_file(event_facet_filename, output_filename, window_si
 
         # Looping through all lines in the eventfacet file
         for line in ef_file:
-            dl = data_line(line, ind, window_size)
+            dl = data_line(line, ind, window_size, act_sum, books)
             if (dl.line_type != "AOI" or not omit_AOIs) and dl.line_type != "NULL":
                 current_test_subject = dl.test_subject
                 if prev_test_subject != current_test_subject: # New test subject detected, need to output and reset
                     for a in action_list.list:  # Add all remaining actions to counts for student before writing
-                        students[prev_test_subject].add_action_data(a, facet_list)
+                        students[prev_test_subject].add_action_data(a, facet_list, window_size)
                     facet_list = data_list()  # Create new empty facet list
                     action_list = data_list()  # Create new empty action list
                     if prev_test_subject in students.keys():
@@ -245,7 +315,7 @@ def create_windowed_action_file(event_facet_filename, output_filename, window_si
 
                 actions_to_write = action_list.return_expired_actions(dl)
                 for a in actions_to_write:
-                    students[current_test_subject].add_action_data(a, facet_list)
+                    students[current_test_subject].add_action_data(a, facet_list, window_size)
 
                 if dl.line_type != "FACET":
                     action_list.add_data(dl)
@@ -260,20 +330,44 @@ def create_windowed_action_file(event_facet_filename, output_filename, window_si
     print("Successfully created WindowedAction file: %s from: %s in %.3f minutes" % (output_filename, event_facet_filename, minutes_elapsed))
 
 
+def parse_windowed_file(windowed_action_file, parsed_windowed_action_file,
+                        desired_prefixes, desired_cols):
+    """Windowed action file generator creates many columns (3 windows x 8 action types x 9 emotion types)
+        This file allows specific types of windows to be kept in the new output file"""
+    windowed_actions = pd.read_csv(windowed_action_file)
+    for e in windowed_actions.columns:
+        for p in desired_prefixes:
+            if p in e and e not in desired_cols and "BooksAndArticles" not in e and "Scanner" not in e:
+                desired_cols.append(e)
+    windowed_actions.loc[:, desired_cols].to_csv(parsed_windowed_action_file, index=False)
+
+
 omit_AOIs = True  # if True only the 9 emotions are included, if false, all emotions + AUs included
 omit_AUs = True
 show = True
 window_size = 5  # in seconds, for the before/after action window size
-event_facet_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequenceFACETPostScan.csv"
-output_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/WindowedActionsPostScan.csv"
+directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/"
+event_facet_filename = directory + "EventSequence/EventSequenceFACET_noAOI.csv"
+output_filename = directory + "EventSequence/WindowedActionsAll.csv"
+activity_summary = directory + "ActivitySummary/ActivitySummary.csv"
+books_and_articles = directory + "BooksAndArticles/BooksAndArticles.csv"
 
 if __name__ == "__main__":
     create_windowed_action_file(event_facet_filename=event_facet_filename,
                                 output_filename=output_filename,
+                                activity_summary_filename=activity_summary,
+                                books_filename=books_and_articles,
                                 window_size=window_size,
                                 omit_AOIs=omit_AOIs,
                                 omit_AUs=omit_AUs,
                                 show=show)
-    add_categorized_columns(windowed_file=output_filename,
-                            output_filename=output_filename[:-4]+"Categories.csv",
-                            normalize=True)
+
+    parse_windowed_file(windowed_action_file=output_filename,
+                        parsed_windowed_action_file=directory+"EventSequence/DesiredWindows.csv",
+                        desired_prefixes=["After-Scan", "After-Submission", "During-Book", "After-Book"],
+                        desired_cols=["TestSubject"])
+
+
+    # add_categorized_columns(windowed_file=output_filename,
+    #                         output_filename=output_filename[:-4]+"Categories.csv",
+    #                         normalize=True)

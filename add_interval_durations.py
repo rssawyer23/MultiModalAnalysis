@@ -1,11 +1,5 @@
 import pandas as pd
 import numpy as np
-event_sequence_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/EventSequence/EventSequence.csv"
-activity_summary_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryGraded.csv"
-activity_interval_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/ActivitySummary/ActivitySummaryGradedIntervals.csv"
-
-interval_names = ["Tutorial", "PreScan", "PostScan"]
-interval_plots = ["TutorialComplete", "TestObject", "SolvedMystery"]
 
 
 def _get_tutorial_df(event_df):
@@ -29,7 +23,6 @@ def _get_tutorial_df(event_df):
     tutorial_df = pd.DataFrame(subject_list, columns=["TestSubject", "Duration-Tutorial"])
     tutorial_df.index = tutorial_df["TestSubject"]
     return tutorial_df
-
 
 
 def add_interval_durations(event_sequence_filename, activity_summary_filename, output_filename):
@@ -66,6 +59,13 @@ def add_interval_durations(event_sequence_filename, activity_summary_filename, o
     act_sum_df.to_csv(output_filename, index=False)
 
 if __name__ == "__main__":
+    event_sequence_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/EventSequence/EventSequenceP.csv"
+    activity_summary_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/ActivitySummary/ActivitySummaryGraded.csv"
+    activity_interval_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/OutputFull2018/ActivitySummary/ActivitySummaryGradedIntervals.csv"
+
+    interval_names = ["Tutorial", "PreScan", "PostScan"]
+    interval_plots = ["TutorialComplete", "TestObject", "SolvedMystery"]
+
     add_interval_durations(event_sequence_filename=event_sequence_filename,
                            activity_summary_filename=activity_summary_filename,
                            output_filename=activity_interval_filename)

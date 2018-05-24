@@ -61,6 +61,7 @@ def get_subject_phase_scatter(subject_data, x="DurationElapsed", y="PC1"):
                 subject_data[y].iloc[-1]]
     return x_coords, y_coords
 
+
 def get_time_series_slopes(subject_dfs, index_ordered_list, time_col="DurationElapsed"):
     """Function for returning the slopes of each phase's time series"""
     slope_series = pd.Series(index=index_ordered_list)
@@ -138,7 +139,7 @@ def get_time_series_subject_phase_break_df(event_df, gold_df, omit_list):
     return return_data_df
 
 if __name__ == "__main__":
-    directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output/"
+    directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/"
     golden_df_intermediate_file = directory + "Intermediate/GoldenDF.csv"
     full_df_intermediate_file = directory + "Intermediate/FullDF.csv"
     output_filename = directory + "Intermediate/MetricsOutput.csv"

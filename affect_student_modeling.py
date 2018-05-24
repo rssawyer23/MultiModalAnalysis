@@ -10,10 +10,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.model_selection import KFold
 from sklearn.linear_model import Ridge
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import PolynomialFeatures
 from parse_events import cumulative_event_blocks
 import datetime
@@ -99,7 +102,7 @@ def get_scaled_data(df, X, standardize_by, omit_list):
     return scaled_X, standard_scaler
 
 
-def pca_analysis(df, columns, components, output_filename="", plot_output_filename="", standardize_by="GameTime", color_by="NLG", show=False, plot=True):
+def pca_analysis(df, columns, components, output_filename="", plot_output_filename="", standardize_by="GameTime", color_by="RevisedNLG", show=False, plot=True):
     """Use PCA to transform the data to a smaller dimension to determine the underlying variance of the data
         Returns the data reduced to number of dimensions specific by (components)"""
     pca_transformer = PCA(n_components=components)
@@ -209,13 +212,13 @@ def calculate_variance_inflation_factors(df):
     return vifs
 
 
-def log_reg_final_output(data, features, pca_output, plot_output, a_output, response="NLG"):
+def log_reg_final_output(data, features, pca_output, plot_output, a_output, response="RevisedNLG"):
     class_series = data.loc[:, response] >= response_median
     print(class_series.describe())
     response_class = np.array(class_series, dtype=int)
     reduced_data, pca, scale = pca_analysis(data, output_filename=pca_output,
                                             plot_output_filename=plot_output,
-                                            columns=features, components=6, color_by="NLG", show=False, plot=False)
+                                            columns=features, components=6, color_by="RevisedNLG", show=False, plot=False)
     scaled_data, scaler = get_scaled_data(df=data, X=data.loc[:, features],
                                   standardize_by="GameTime", omit_list=["GameTime"])
 
@@ -257,13 +260,13 @@ def log_reg_final_output(data, features, pca_output, plot_output, a_output, resp
     print(result.summary())
 
 
-def plot_SVM_boundary(data, features, pca_output, plot_output, boundary_output, f1=0, f2=1, response="NLG"):
+def plot_SVM_boundary(data, features, pca_output, plot_output, boundary_output, f1=0, f2=1, response="RevisedNLG"):
     class_series = data.loc[:, response] < response_median
     print(class_series.describe())
     response_class = np.array(class_series, dtype=int)
     reduced_data, pca, scale = pca_analysis(data, output_filename=pca_output,
                                             plot_output_filename=plot_output,
-                                            columns=features, components=6, color_by="NLG", show=False, plot=False)
+                                            columns=features, components=6, color_by="RevisedNLG", show=False, plot=False)
     last_four_averages = reduced_data.mean(axis=0).iloc[2:]
     final_SVC = SVC(kernel='linear')
     final_SVC.fit(X=reduced_data, y=response_class)
@@ -314,7 +317,7 @@ def print_accuracy_results():
     pass
 
 if __name__ == "__main__":
-    results_directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/Results/"
+    results_directory = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/RevisedResults/"
     output_filenames = {"BaseCorr":"%sBaseFeaturesCorrelation.csv" % results_directory,
                         "EmotionCorr":"%sEmotionFeaturesCorrelation.csv" % results_directory,
                         "AUCorr":"%sAUFeaturesCorrelation.csv" % results_directory,
@@ -332,25 +335,25 @@ if __name__ == "__main__":
                         }
     interval_predictions = False
     start_time = datetime.datetime.now()
-    data_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummaryAppended.csv"
+    data_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummaryAppendedRevised.csv"
     data = pd.read_csv(data_filename)
     data = remove_null_facet_rows(data)
     data = remove_null_trace_rows(data)
     last_time = output_time("Reading Activity Summary", start_time)
 
-    response_column = "NLG"  # Typically one of [NLG, Post-Presence, FinalGameScore/CumulativeGameScore]
+    response_column = "RevisedNLG"  # Typically one of [NLG, Post-Presence, FinalGameScore/CumulativeGameScore, RevisedNLG]
     response_median = data[response_column].median()
 
 
     # Adding the time-interval based data for use in modelling
-    data_save_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/SupervisedLearningIntervals2.csv"
+    data_save_filename = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/SupervisedLearningIntervalsR.csv"
     if os.path.isfile(data_save_filename):
         timed_data = pd.read_csv(data_save_filename)
     else:
         timed_data, counts = cumulative_event_blocks(event_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/EventSequence/EventSequenceFACET.csv",
-                                activity_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummaryAppended.csv",
+                                activity_filename="C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/ActivitySummary/ActivitySummaryAppendedRevised.csv",
                                 interval=5*60,
-                                add_columns=["NLG", "Post-Presence", "PreTestScore"],
+                                add_columns=["RevisedNLG", "Post-Presence", "PreTestScore", "Post-IMI"],
                                 keep_list=[e for e in list(data["TestSubject"].unique()) if e != "CI1301PN066"])
         timed_data.to_csv(data_save_filename, index=False)
     last_time = output_time("Reading Event Examples", last_time)
@@ -372,7 +375,7 @@ if __name__ == "__main__":
                     "EmotionCorr":emotion_features,
                     "AUCorr":au_features,
                     "AllCorr":all_features}
-    output_correlation_files(data=final_data, response="NLG",
+    output_correlation_files(data=final_data, response="RevisedNLG",
                              feature_dict=feature_dict, output_filenames=output_filenames,
                              show=False)
 
@@ -381,15 +384,15 @@ if __name__ == "__main__":
         timed_data = final_data
     #FINAL ONLY DATAFRAME CREATION HERE timed_data = final_data_rows
     #
-    response_variables = ["NLG", "Post-Presence", "CumulativeGameScore"]
+    response_variables = ["RevisedNLG", "Post-Presence", "CumulativeGameScore", "Post-IMI"]
     multimodal_handler = "Additive"  # Can be one of ["Channels", "Specific", "Additive"]
 
     # Should loop through a range of IntervalID to get cumulative models for each time stamp (train using all in LOOCV?)
 
     if multimodal_handler == "Channels":
-        reduced_emotions, pca_emotions, scale_emotions = pca_analysis(timed_data, columns=emotion_features, components=2, color_by="NLG", show=True, plot=False)
-        reduced_aus, pca_aus, scale_aus = pca_analysis(timed_data, columns=au_features, components=2, color_by="NLG", show=True, plot=False)
-        reduced_base, pca_base, scale_pca = pca_analysis(timed_data, columns=base_features, components=3, color_by="NLG", show=True, plot=False)
+        reduced_emotions, pca_emotions, scale_emotions = pca_analysis(timed_data, columns=emotion_features, components=2, color_by="RevisedNLG", show=True, plot=False)
+        reduced_aus, pca_aus, scale_aus = pca_analysis(timed_data, columns=au_features, components=2, color_by="RevisedNLG", show=True, plot=False)
+        reduced_base, pca_base, scale_pca = pca_analysis(timed_data, columns=base_features, components=3, color_by="RevisedNLG", show=True, plot=False)
 
         # Creating supersets of features for Base + AUs and Base + Emotions
         reduced_aus = pd.concat([reduced_base, reduced_aus], axis=1)
@@ -397,12 +400,12 @@ if __name__ == "__main__":
         reduced_all = pd.DataFrame()
     elif multimodal_handler == "Specific":
         reduced_emotions, pca_emotions, scale_emotions = pca_analysis(timed_data, columns=["C-FD-JoyEvidence", "C-FD-FrustrationEvidence"],
-                                                                      components=1, color_by="NLG", show=True,
+                                                                      components=1, color_by="RevisedNLG", show=True,
                                                                       plot=False, standardize_by="")
-        reduced_aus, pca_aus, scale_aus = pca_analysis(timed_data, columns=["C-FD-AU4Evidence"], components=1, color_by="NLG",
+        reduced_aus, pca_aus, scale_aus = pca_analysis(timed_data, columns=["C-FD-AU4Evidence"], components=1, color_by="RevisedNLG",
                                                        show=True, plot=False, standardize_by="")
         reduced_base, pca_base, scale_pca = pca_analysis(timed_data, columns=base_features, components=3,
-                                                         color_by="NLG", show=True, plot=False)
+                                                         color_by="RevisedNLG", show=True, plot=False)
 
         # Creating supersets of features for Base + AUs and Base + Emotions
         reduced_aus = pd.concat([reduced_base, reduced_aus], axis=1)
@@ -411,20 +414,20 @@ if __name__ == "__main__":
     else:  # multimodal_handler == "Additive"
         reduced_base, pca_base, scale_pca = pca_analysis(timed_data, output_filename="",
                                                          plot_output_filename="",
-                                                         columns=base_features, components=6, color_by="NLG",
+                                                         columns=base_features, components=6, color_by="RevisedNLG",
                                                          show=True, plot=False)
         reduced_emotions, pca_emotions, scale_emotions = pca_analysis(timed_data, output_filename="",
                                                                       plot_output_filename="",
                                                          columns=base_features + emotion_features, components=6,
-                                                         color_by="NLG", show=True, plot=False)
+                                                         color_by="RevisedNLG", show=True, plot=False)
         reduced_aus, pca_aus, scale_aus = pca_analysis(timed_data, output_filename="",
                                                        plot_output_filename="",
                                                        columns=base_features + au_features, components=6,
-                                                       color_by="NLG", show=True, plot=False)
+                                                       color_by="RevisedNLG", show=True, plot=False)
         reduced_all, pca_all, scale_all = pca_analysis(timed_data, output_filename="",
                                                        plot_output_filename="",
                                                        columns=base_features+au_features+emotion_features, components=6,
-                                                       color_by="NLG", show=True, plot=False)
+                                                       color_by="RevisedNLG", show=True, plot=False)
 
     feature_dict = {"Base":reduced_base,
                     "wAUs":reduced_aus,
@@ -447,149 +450,173 @@ if __name__ == "__main__":
 
     y = timed_data.loc[:, response_column]
 
-    # regressors = {"Linear": LinearRegression()}
-    # classifiers = {"LogReg": LogisticRegression(),
-    #                "SVM.Lin":SVC(C=1.0, kernel='linear')}
-    # prediction_type = "Classification"
-    # model_keys = regressors.keys() if prediction_type == "Regression" else classifiers.keys()
-    #
-    # nlg_error_data = ErrorStruct(name=response_column, baseline_keyword="MeanBaseline", models=model_keys, keywords=feature_dict.keys())
-    #
-    # all_subjects = [e for e in list(data["TestSubject"].unique()) if e != "CI1301PN066"]
-    #
-    # # leave one subject out cross validation procedure
-    # for subject in all_subjects:
-    #     train = timed_data["TestSubject"] != subject
-    #     test = timed_data["TestSubject"] == subject
-    #     if prediction_type == "Regression":
-    #         train_mean = y.loc[train].mean()
-    #         mean_estimate_error = y.loc[test] - train_mean
-    #         nlg_error_data.add_error_list(list(mean_estimate_error), model="MeanBaseline")
-    #
-    #         for reg_name in regressors.keys():
-    #             for feature_set in feature_dict.keys():
-    #                 if feature_set == "Base":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                             columns=base_features,
-    #                                                             components=6,
-    #                                                             color_by="NLG",
-    #                                                             show=False,
-    #                                                             plot=False)
-    #                 elif feature_set == "wEmotions":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                               columns=base_features + emotion_features,
-    #                                                               components=6, color_by="NLG",
-    #                                                               show=False, plot=False)
-    #                 elif feature_set == "wAUs":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                             columns=base_features + au_features,
-    #                                                             components=6, color_by="NLG", show=False, plot=False)
-    #                 regressor = regressors[reg_name]
-    #                 regressor.fit(X=feature_data.loc[train, :], y=y.loc[train])
-    #
-    #                 predictions = regressor.predict(X=feature_data.loc[test, :])
-    #                 errors = y.loc[test] - predictions
-    #                 nlg_error_data.add_error_list(list(errors), model=reg_name, keyword=feature_set)
-    #     else:  # prediction_type == "Classification":
-    #
-    #         response = pd.Series(y < response_median, dtype=int)
-    #         train_class = int(np.mean(response.loc[train]) + 0.5)
-    #         mean_estimate_accuracy = np.array(np.equal(response.loc[test], train_class), dtype=int)
-    #         nlg_error_data.add_error_list(list(mean_estimate_accuracy), model="MeanBaseline")
-    #
-    #         for clf_name in classifiers.keys():
-    #             for feature_set in feature_dict.keys():
-    #                 if feature_set == "Base":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                             columns=base_features,
-    #                                                             components=6,
-    #                                                             color_by="NLG",
-    #                                                             show=False,
-    #                                                             plot=False)
-    #                     feature_columns = base_features
-    #                 elif feature_set == "wEmotions":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                               columns=base_features + emotion_features,
-    #                                                               components=6, color_by="NLG",
-    #                                                               show=False, plot=False)
-    #                     feature_columns = base_features + emotion_features
-    #                 elif feature_set == "wAUs":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                             columns=base_features + au_features,
-    #                                                             components=6, color_by="NLG", show=False, plot=False)
-    #                     feature_columns = base_features + au_features
-    #                 elif feature_set == "All":
-    #                     feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
-    #                                                             columns=base_features + au_features + emotion_features,
-    #                                                             components=6, color_by="NLG", show=False, plot=False)
-    #                     feature_columns = base_features + au_features + emotion_features
-    #                 else:
-    #                     feature_data = pd.DataFrame()
-    #                     pca = PCA()
-    #                     scale = StandardScaler()
-    #                     feature_columns = []
-    #                 #feature_data = feature_dict[feature_set]
-    #                 classifier = classifiers[clf_name]
-    #                 classifier.fit(X=feature_data, y=response.loc[train])
-    #
-    #                 test_feature_data = apply_fitted_transformation(df=timed_data,
-    #                                                                 columns=feature_columns,
-    #                                                                 pca=pca,
-    #                                                                 scaler=scale,
-    #                                                                 standardize_by="GameTime")
-    #                 predictions = classifier.predict(X=test_feature_data.loc[test, :])
-    #                 accurates = np.array(np.equal(response.loc[test], predictions), dtype=int)
-    #                 nlg_error_data.add_error_list(list(accurates), model=clf_name, keyword=feature_set)
-    #
-    #
-    # last_time = output_time("Calculating Prediction Errors", last_time)
-    # nlg_error_data.output_diagnostics()
-    # baseline_errors, baseline_std, = nlg_error_data.error_by_interval(model="MeanBaseline")
-    #
-    # for model in model_keys:
-    #     base_model_means, base_model_std = nlg_error_data.error_by_interval(model=model, keyword="Base")
-    #     aus_model_means, aus_model_std = nlg_error_data.error_by_interval(model=model, keyword="wAUs")
-    #     emotions_model_means, emotions_model_std = nlg_error_data.error_by_interval(model=model, keyword="wEmotions")
-    #     all_model_means, all_model_std = nlg_error_data.error_by_interval(model=model, keyword="All")
-    #
-    #     # fig, ax = plt.subplots(1)
-    #     # ax.set_title(model)
-    #     # ax.set_xlabel("Time Interval")
-    #     # ax.set_ylabel("Classification Accuracy")
-    #     # ax.axhline(y=0.525424, color="red", label='Baseline')
-    #     # ax.plot(list(np.arange(start=0, stop=9*5, step=5)), base_model_means.iloc[:9], color="blue", label="Base-SVM")
-    #     # ax.plot(list(np.arange(start=0, stop=9*5, step=5)), emotions_model_means.iloc[:9], color="green", label="Emotions-SVM")
-    #     # ax.legend(loc=4)
-    #     # plt.show()
-    #
-    #     output_df = pd.concat([baseline_errors, base_model_means, aus_model_means, emotions_model_means, all_model_means], axis=1)
-    #     output_df.columns = ["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model]
-    #     print(output_df.iloc[:9, :])
-    #     #print("Mean Difference: %.4f" % (output_df.loc[0:9, "Base-Linear"] - output_df.loc[0:9, "Emotions-Linear"]).mean())
-    #     accuracy_df = pd.DataFrame()
-    #
-    #     baseline_last_mae, baseline_last_std_mae, baseline_last_mse, baseline_last_std_mse, baseline_all = \
-    #         nlg_error_data.error_last_interval_per_fold(model="MeanBaseline")
-    #     base_model_last_mae, base_model_last_std_mae, base_model_last_mse, base_model_last_std_mse, base_model_all = \
-    #         nlg_error_data.error_last_interval_per_fold(model=model, keyword="Base")
-    #     aus_model_last_mae, aus_model_last_std_mae, aus_model_last_mse, aus_model_last_std_mse, aus_model_all = \
-    #         nlg_error_data.error_last_interval_per_fold(model=model, keyword="wAUs")
-    #     emotions_model_last_mae, emotions_model_last_std_mae, emotions_model_last_mse, emotions_model_last_std_mse, emotions_model_all = \
-    #         nlg_error_data.error_last_interval_per_fold(model=model, keyword="wEmotions")
-    #     all_model_last_mae, all_model_last_std_mae, all_model_last_mse, all_model_last_std_mse, all_model_all = \
-    #         nlg_error_data.error_last_interval_per_fold(model=model, keyword="All")
-    #     accuracy_df["MSE"] = pd.Series([baseline_last_mse, base_model_last_mse, aus_model_last_mse, emotions_model_last_mse, all_model_last_mse],
-    #                     index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
-    #     accuracy_df["MAE"] = pd.Series([baseline_last_mae, base_model_last_mae, aus_model_last_mae, emotions_model_last_mae, all_model_last_mae],
-    #                     index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
-    #     accuracy_df["MSE-Std"] = pd.Series([baseline_last_std_mse, base_model_last_std_mse, aus_model_last_std_mse, emotions_model_last_std_mse, all_model_last_std_mse],
-    #                     index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
-    #     accuracy_df["MAE-Std"] = pd.Series([baseline_last_std_mae, base_model_last_std_mae, aus_model_last_std_mae, emotions_model_last_std_mae, all_model_last_std_mae],
-    #                     index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
-    #     accuracy_df["All-MAE"] = pd.Series([baseline_all, base_model_all, aus_model_all, emotions_model_all, all_model_all],
-    #                     index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
-    #
-    #     print(accuracy_df)
+    regressors = {"Linear": LinearRegression(),
+                  "Ridge":Ridge(),
+                  "NN":MLPRegressor(hidden_layer_sizes=(5,), alpha=100.0)}
+    classifiers = {"LogReg": LogisticRegression(),
+                   "SVM.Lin":SVC(C=1.0, kernel='linear'),
+                   "KNN5":KNeighborsClassifier(n_neighbors=5),
+                   "NN":MLPClassifier(hidden_layer_sizes=(5,), alpha=1000.0),
+                   "RF":RandomForestClassifier()}
+    prediction_type = "Classification"
+    model_keys = regressors.keys() if prediction_type == "Regression" else classifiers.keys()
+
+    nlg_error_data = ErrorStruct(name=response_column, baseline_keyword="MeanBaseline", models=model_keys, keywords=feature_dict.keys())
+
+    all_subjects = [e for e in list(data["TestSubject"].unique()) if e != "CI1301PN066"]
+
+    # leave one subject out cross validation procedure
+    for subject in all_subjects:
+        train = timed_data["TestSubject"] != subject
+        test = timed_data["TestSubject"] == subject
+        if prediction_type == "Regression":
+            train_mean = y.loc[train].mean()
+            mean_estimate_error = y.loc[test] - train_mean
+            nlg_error_data.add_error_list(list(mean_estimate_error), model="MeanBaseline")
+
+            for reg_name in regressors.keys():
+                for feature_set in feature_dict.keys():
+                    if feature_set == "Base":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=base_features,
+                                                                components=6,
+                                                                color_by="RevisedNLG",
+                                                                show=False, plot=False)
+                        feature_columns = base_features
+                    elif feature_set == "wEmotions":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                  columns=base_features + emotion_features,
+                                                                  components=6, color_by="RevisedNLG",
+                                                                  show=False, plot=False)
+                        feature_columns = base_features + emotion_features
+                    elif feature_set == "wAUs":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=base_features + au_features,
+                                                                components=6, color_by="RevisedNLG",
+                                                                show=False, plot=False)
+                        feature_columns = base_features + au_features
+                    elif feature_set == "All":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=base_features + au_features + emotion_features,
+                                                                components=6, color_by="RevisedNLG", show=False, plot=False)
+                        feature_columns = base_features + au_features + emotion_features
+                    else:
+                        feature_data = pd.DataFrame()
+                        pca = PCA()
+                        scale = StandardScaler()
+                        feature_columns = []
+                        feature_columns = base_features + au_features
+
+                    regressor = regressors[reg_name]
+                    regressor.fit(X=feature_data, y=y.loc[train])
+
+                    test_feature_data = apply_fitted_transformation(df=timed_data,
+                                                                    columns=feature_columns,
+                                                                    pca=pca,
+                                                                    scaler=scale,
+                                                                    standardize_by="GameTime")
+                    predictions = regressor.predict(X=test_feature_data.loc[test, :])
+                    errors = y.loc[test] - predictions
+                    nlg_error_data.add_error_list(list(errors), model=reg_name, keyword=feature_set)
+        else:  # prediction_type == "Classification":
+            response = pd.Series(y < response_median, dtype=int)
+            train_class = int(np.mean(response.loc[train]) + 0.5)
+            mean_estimate_accuracy = np.array(np.equal(response.loc[test], train_class), dtype=int)
+            nlg_error_data.add_error_list(list(mean_estimate_accuracy), model="MeanBaseline")
+
+            for clf_name in classifiers.keys():
+                for feature_set in feature_dict.keys():
+                    if feature_set == "Base":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=base_features,
+                                                                components=6,
+                                                                color_by="RevisedNLG",
+                                                                show=False,
+                                                                plot=False)
+                        feature_columns = base_features
+                    elif feature_set == "wEmotions":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                  columns=emotion_features,
+                                                                  components=6, color_by="RevisedNLG",
+                                                                  show=False, plot=False)
+                        feature_columns = emotion_features
+                    elif feature_set == "wAUs":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=au_features,
+                                                                components=6, color_by="RevisedNLG", show=False, plot=False)
+                        feature_columns = au_features
+                    elif feature_set == "All":
+                        feature_data, pca, scale = pca_analysis(timed_data.loc[train, :],
+                                                                columns=au_features + emotion_features,
+                                                                components=6, color_by="RevisedNLG", show=False, plot=False)
+                        feature_columns = au_features + emotion_features
+                    else:
+                        feature_data = pd.DataFrame()
+                        pca = PCA()
+                        scale = StandardScaler()
+                        feature_columns = []
+                    #feature_data = feature_dict[feature_set]
+                    classifier = classifiers[clf_name]
+                    classifier.fit(X=feature_data, y=response.loc[train])
+
+                    test_feature_data = apply_fitted_transformation(df=timed_data,
+                                                                    columns=feature_columns,
+                                                                    pca=pca,
+                                                                    scaler=scale,
+                                                                    standardize_by="GameTime")
+                    predictions = classifier.predict(X=test_feature_data.loc[test, :])
+                    accurates = np.array(np.equal(response.loc[test], predictions), dtype=int)
+                    nlg_error_data.add_error_list(list(accurates), model=clf_name, keyword=feature_set)
+
+
+    last_time = output_time("Calculating Prediction Errors", last_time)
+    nlg_error_data.output_diagnostics()
+    baseline_errors, baseline_std, = nlg_error_data.error_by_interval(model="MeanBaseline")
+
+    for model in model_keys:
+        base_model_means, base_model_std = nlg_error_data.error_by_interval(model=model, keyword="Base")
+        aus_model_means, aus_model_std = nlg_error_data.error_by_interval(model=model, keyword="wAUs")
+        emotions_model_means, emotions_model_std = nlg_error_data.error_by_interval(model=model, keyword="wEmotions")
+        all_model_means, all_model_std = nlg_error_data.error_by_interval(model=model, keyword="All")
+
+        # fig, ax = plt.subplots(1)
+        # ax.set_title(model)
+        # ax.set_xlabel("Time Interval")
+        # ax.set_ylabel("Classification Accuracy")
+        # ax.axhline(y=0.525424, color="red", label='Baseline')
+        # ax.plot(list(np.arange(start=0, stop=9*5, step=5)), base_model_means.iloc[:9], color="blue", label="Base-SVM")
+        # ax.plot(list(np.arange(start=0, stop=9*5, step=5)), emotions_model_means.iloc[:9], color="green", label="Emotions-SVM")
+        # ax.legend(loc=4)
+        # plt.show()
+
+        output_df = pd.concat([baseline_errors, base_model_means, aus_model_means, emotions_model_means, all_model_means], axis=1)
+        output_df.columns = ["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model]
+        print(output_df.iloc[:9, :])
+        #print("Mean Difference: %.4f" % (output_df.loc[0:9, "Base-Linear"] - output_df.loc[0:9, "Emotions-Linear"]).mean())
+        accuracy_df = pd.DataFrame()
+
+        baseline_last_mae, baseline_last_std_mae, baseline_last_mse, baseline_last_std_mse, baseline_all = \
+            nlg_error_data.error_last_interval_per_fold(model="MeanBaseline")
+        base_model_last_mae, base_model_last_std_mae, base_model_last_mse, base_model_last_std_mse, base_model_all = \
+            nlg_error_data.error_last_interval_per_fold(model=model, keyword="Base")
+        aus_model_last_mae, aus_model_last_std_mae, aus_model_last_mse, aus_model_last_std_mse, aus_model_all = \
+            nlg_error_data.error_last_interval_per_fold(model=model, keyword="wAUs")
+        emotions_model_last_mae, emotions_model_last_std_mae, emotions_model_last_mse, emotions_model_last_std_mse, emotions_model_all = \
+            nlg_error_data.error_last_interval_per_fold(model=model, keyword="wEmotions")
+        all_model_last_mae, all_model_last_std_mae, all_model_last_mse, all_model_last_std_mse, all_model_all = \
+            nlg_error_data.error_last_interval_per_fold(model=model, keyword="All")
+        accuracy_df["MSE"] = pd.Series([baseline_last_mse, base_model_last_mse, aus_model_last_mse, emotions_model_last_mse, all_model_last_mse],
+                        index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
+        accuracy_df["MAE"] = pd.Series([baseline_last_mae, base_model_last_mae, aus_model_last_mae, emotions_model_last_mae, all_model_last_mae],
+                        index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
+        accuracy_df["MSE-Std"] = pd.Series([baseline_last_std_mse, base_model_last_std_mse, aus_model_last_std_mse, emotions_model_last_std_mse, all_model_last_std_mse],
+                        index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
+        accuracy_df["MAE-Std"] = pd.Series([baseline_last_std_mae, base_model_last_std_mae, aus_model_last_std_mae, emotions_model_last_std_mae, all_model_last_std_mae],
+                        index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
+        accuracy_df["All-MAE"] = pd.Series([baseline_all, base_model_all, aus_model_all, emotions_model_all, all_model_all],
+                        index=["Baseline", "Base-%s" % model, "AUs-%s" % model, "Emotions-%s" % model, "All-%s" % model])
+
+        print(accuracy_df)
     #
     # print(final_data.loc[:,base_features].apply(lambda col: (col / (final_data.loc[:, "GameTime"] / 60.0))).mean())
     # print(final_data.loc[:,"PreTestScore"].describe())

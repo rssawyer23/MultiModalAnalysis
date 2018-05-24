@@ -31,10 +31,10 @@ if __name__ == "__main__":
 
     # Retrieved files are not part of the data pipeline and do not have the prefix as they could be stored in alternate places
     retrieved_qualtrics_key = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/SurveyGradingScheme.csv"
-    retrieved_post_test = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/CI_PostTest_Data 3-1-18.csv"
-    retrieved_pre_test = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/Output318/CI_PreTest_Data 3-1-18.csv"
+    retrieved_post_test = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/CI_PostTest_Data 3-1-18.csv"
+    retrieved_pre_test = "C:/Users/robsc/Documents/NC State/GRAWork/CIData/CI_PreTest_Data 3-1-18.csv"
 
-    # These should not need to be changed
+    # These should not need to be changed (output from data pipeline in the ci_prefix directory)
     unfiltered_event_sequence = ci_prefix + "EventSequence/EventSequence.csv"
     raw_event_sequence = ci_prefix + "EventSequence/EventSequenceP.csv"
     raw_facet_threshold = ci_prefix + "FACET-ThresholdCrossed/FACET-ThresholdCrossed.csv"
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     raw_facet_threshold_directory = ci_prefix + "FACET-Z-Score/"
     raw_facet_directory = ci_prefix + "FACET/"
 
-    # Change as needed based on desired filenames
+    # Change as needed based on desired filenames (will be output to ci_prefix directory)
     desired_graded_activity_summary = ci_prefix + "ActivitySummary/ActivitySummaryGraded.csv"
     desired_facet_events = ci_prefix + "FACET-ThresholdCrossed/FACET-Events.csv"
     desired_event_facet = ci_prefix + "EventSequence/EventSequenceFACET.csv"
@@ -71,33 +71,6 @@ if __name__ == "__main__":
                       facet_filename=desired_facet_events,
                       event_facet_filename=desired_event_facet,
                       show=False)
-
-    create_windowed_action_file(event_facet_filename=desired_event_facet[:-4]+"Tutorial.csv",
-                                output_filename=desired_windowed_prefix+"Tutorial.csv", window_size=window_size)
-    create_windowed_action_file(event_facet_filename=desired_event_facet[:-4] + "PreScan.csv",
-                                output_filename=desired_windowed_prefix + "PreScan.csv", window_size=window_size)
-    create_windowed_action_file(event_facet_filename=desired_event_facet[:-4] + "PostScan.csv",
-                                output_filename=desired_windowed_prefix + "PostScan.csv", window_size=window_size)
-    create_windowed_action_file(event_facet_filename=desired_event_facet,
-                                output_filename=desired_windowed_prefix + "All.csv", window_size=window_size)
-
-    perform_condition_analysis(data_filename=desired_windowed_prefix+"Tutorial.csv",
-                               output_filename=desired_windowed_prefix+"Tutorial-ConditionAnalysis.csv")
-    perform_condition_analysis(data_filename=desired_windowed_prefix+"PreScan.csv",
-                               output_filename=desired_windowed_prefix+"PreScan-ConditionAnalysis.csv")
-    perform_condition_analysis(data_filename=desired_windowed_prefix+"PostScan.csv",
-                               output_filename=desired_windowed_prefix+"PostScan-ConditionAnalysis.csv")
-    perform_condition_analysis(data_filename=desired_windowed_prefix+"All.csv",
-                               output_filename=desired_windowed_prefix+"All-ConditionAnalysis.csv")
-
-    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"Tutorial.csv",
-                               output_filename=desired_windowed_prefix+"Tutorial-ActionAnalysis.csv")
-    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"PreScan.csv",
-                               output_filename=desired_windowed_prefix+"PreScan-ActionAnalysis.csv")
-    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"PostScan.csv",
-                               output_filename=desired_windowed_prefix+"PostScan-ActionAnalysis.csv")
-    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"All.csv",
-                               output_filename=desired_windowed_prefix+"All-ActionAnalysis.csv")
 
     grade_tests(grading_key_filename=retrieved_qualtrics_key,
                 post_test_filename=retrieved_post_test,
@@ -138,6 +111,33 @@ if __name__ == "__main__":
 
     perform_condition_analysis(data_filename=desired_standardized_activity_summary,
                                output_filename=desired_standardized_activity_summary[:-4]+"-ConditionAnalysis.csv")
+
+    # create_windowed_action_file(event_facet_filename=desired_event_facet[:-4]+"Tutorial.csv",
+    #                             output_filename=desired_windowed_prefix+"Tutorial.csv", window_size=window_size)
+    # create_windowed_action_file(event_facet_filename=desired_event_facet[:-4] + "PreScan.csv",
+    #                             output_filename=desired_windowed_prefix + "PreScan.csv", window_size=window_size)
+    # create_windowed_action_file(event_facet_filename=desired_event_facet[:-4] + "PostScan.csv",
+    #                             output_filename=desired_windowed_prefix + "PostScan.csv", window_size=window_size)
+    # create_windowed_action_file(event_facet_filename=desired_event_facet,
+    #                             output_filename=desired_windowed_prefix + "All.csv", window_size=window_size)
+
+    perform_condition_analysis(data_filename=desired_windowed_prefix+"Tutorial.csv",
+                               output_filename=desired_windowed_prefix+"Tutorial-ConditionAnalysis.csv")
+    perform_condition_analysis(data_filename=desired_windowed_prefix+"PreScan.csv",
+                               output_filename=desired_windowed_prefix+"PreScan-ConditionAnalysis.csv")
+    perform_condition_analysis(data_filename=desired_windowed_prefix+"PostScan.csv",
+                               output_filename=desired_windowed_prefix+"PostScan-ConditionAnalysis.csv")
+    perform_condition_analysis(data_filename=desired_windowed_prefix+"All.csv",
+                               output_filename=desired_windowed_prefix+"All-ConditionAnalysis.csv")
+
+    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"Tutorial.csv",
+                               output_filename=desired_windowed_prefix+"Tutorial-ActionAnalysis.csv")
+    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"PreScan.csv",
+                               output_filename=desired_windowed_prefix+"PreScan-ActionAnalysis.csv")
+    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"PostScan.csv",
+                               output_filename=desired_windowed_prefix+"PostScan-ActionAnalysis.csv")
+    perform_action_analysis(windowed_action_filename=desired_windowed_prefix+"All.csv",
+                               output_filename=desired_windowed_prefix+"All-ActionAnalysis.csv")
 
     # student_df = output_FACET_evidence(target_dir=raw_facet_threshold_directory,
     #                                    data_extension="FACET-Z-Score.csv",
